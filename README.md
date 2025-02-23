@@ -52,7 +52,7 @@ Bing (not recommended)
 ### 🔧 Installation
 ```
 git clone https://github.com/nomadxxxx/fast-brave-debloater.git
-cd brave-debloat
+cd fast-brave-debloater
 chmod +x brave_debloat.sh
 sudo ./brave_debloat.sh
 ```
