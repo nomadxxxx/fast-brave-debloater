@@ -162,8 +162,18 @@ EOF
                 log_message "Search engine set to Brave Search"
                 break
                 ;;
-
             2)
+                cat > "${policy_file}" << EOF
+{
+    "DefaultSearchProviderEnabled": true,
+    "DefaultSearchProviderName": "DuckDuckGo",
+    "DefaultSearchProviderSearchURL": "https://duckduckgo.com/?q={searchTerms}"
+}
+EOF
+                log_message "Search engine set to DuckDuckGo"
+                break
+                ;;
+            3)
                 read -p "Enter your SearXNG instance URL: " searx_url
                 if [[ "${searx_url}" =~ ^https?:// ]]; then
                     cat > "${policy_file}" << EOF
@@ -180,7 +190,7 @@ EOF
                     sleep 2
                 fi
                 ;;
-            3)
+            4)
                 read -p "Enter your Whoogle instance URL: " whoogle_url
                 if [[ "${whoogle_url}" =~ ^https?:// ]]; then
                     cat > "${policy_file}" << EOF
@@ -197,7 +207,7 @@ EOF
                     sleep 2
                 fi
                 ;;
-            4)
+            5)
                 cat > "${policy_file}" << EOF
 {
     "DefaultSearchProviderEnabled": true,
@@ -208,7 +218,7 @@ EOF
                 log_message "Search engine set to Yandex"
                 break
                 ;;
-            5)
+            6)
                 cat > "${policy_file}" << EOF
 {
     "DefaultSearchProviderEnabled": true,
@@ -219,7 +229,7 @@ EOF
                 log_message "Search engine set to Kagi"
                 break
                 ;;
-            6)
+            7)
                 cat > "${policy_file}" << EOF
 {
     "DefaultSearchProviderEnabled": true,
@@ -230,7 +240,7 @@ EOF
                 log_message "Search engine set to Google"
                 break
                 ;;
-            7)
+            8)
                 cat > "${policy_file}" << EOF
 {
     "DefaultSearchProviderEnabled": true,
@@ -241,7 +251,7 @@ EOF
                 log_message "Search engine set to Bing"
                 break
                 ;;
-            8)
+            9)
                 return
                 ;;
             *)
