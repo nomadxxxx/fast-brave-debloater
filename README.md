@@ -89,8 +89,9 @@ Select specific customizations:
 
 
 ⚠️ Important Notes
-Requires root privileges. Requires a browser restart. To launch Brave after running the Brave Debloated you should use the Brave Debloater shortcut (adds a brave-debloat.desktop you should see in Rofi etc..
-
-Custom Scriptlets requires you enable dev mode manually. 
+- Requires root privileges. 
+- Requires a browser restart. 
+To launch Brave after running the Brave Debloated you should use the Brave Debloater shortcut (adds a **brave-debloat.desktop** you should see in Rofi etc..
+- **Custom Scriptlets requires you enable dev mode manually. ** if you are unsure how to enter dev mode do not enable this feature.
 
 I've only tested this on Arch and using an Nvidia GPU so how this script works with AMD cards I'm not 100%.
