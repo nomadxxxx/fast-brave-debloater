@@ -88,8 +88,8 @@ apply_brave_policies() {
     "SafeBrowsingEnabled": false,
     "BackgroundModeEnabled": false,
     "DefaultSearchProviderEnabled": true,
-    "DefaultSearchProviderName": "DuckDuckGo",
-    "DefaultSearchProviderSearchURL": "https://duckduckgo.com/?q={searchTerms}",
+    "DefaultSearchProviderName": "Brave Search",
+    "DefaultSearchProviderSearchURL": "https://search.brave.com/search?q={searchTerms}",
     "ShowFullURLs": true,
     "WideAddressBar": true,
     "BookmarksBarEnabled": true,
@@ -136,16 +136,17 @@ set_search_engine() {
     while true; do
         clear
         echo "=== Search Engine Selection ==="
-        echo "1. DuckDuckGo (Recommended)"
-        echo "2. SearXNG (Recommended)"
-        echo "3. Whoogle (Recommended)"
-        echo "4. Yandex (enjoy russian botnet)"
-        echo "5. Kagi (good, but enjoy paying)"
-        echo "6. Google (welcome to the botnet)"
-        echo "7. Bing (enjoy your AIDs)"
-        echo "8. Back to main menu"
+        echo "1. Brave Search (Privacy focused but collects data)"
+        echo "2. DuckDuckGo (Privacy focused but collects data)"
+        echo "3. SearXNG (Recommended but only if self-hosted)"
+        echo "4. Whoogle (Recommended but only if self-hosted)"
+        echo "5. Yandex (enjoy russian botnet)"
+        echo "6. Kagi (excellent engine, but a paid service)"
+        echo "7. Google (welcome to the botnet)"
+        echo "8. Bing (enjoy your AIDs)"
+        echo "9. Back to main menu"
         
-        read -p "Enter your choice [1-8]: " search_choice
+        read -p "Enter your choice [1-9]: " search_choice
         
         local policy_file="${POLICY_DIR}/search_provider.json"
         
@@ -154,13 +155,14 @@ set_search_engine() {
                 cat > "${policy_file}" << EOF
 {
     "DefaultSearchProviderEnabled": true,
-    "DefaultSearchProviderName": "DuckDuckGo",
-    "DefaultSearchProviderSearchURL": "https://duckduckgo.com/?q={searchTerms}"
+    "DefaultSearchProviderName": "Brave",
+    "DefaultSearchProviderSearchURL": "https://search.brave.com/search?q={searchTerms}"
 }
 EOF
-                log_message "Search engine set to DuckDuckGo"
+                log_message "Search engine set to Brave Search"
                 break
                 ;;
+
             2)
                 read -p "Enter your SearXNG instance URL: " searx_url
                 if [[ "${searx_url}" =~ ^https?:// ]]; then
@@ -272,6 +274,8 @@ show_menu() {
   ██╔══██╗██╔══██╗██╔══██║╚██╗ ██╔╝██╔══╝      ██║  ██║██╔══╝  ██╔══██╗██║     ██║   ██║██╔══██║   ██║   
   ██████╔╝██║  ██║██║  ██║ ╚████╔╝ ███████╗    ██████╔╝███████╗██████╔╝███████╗╚██████╔╝██║  ██║   ██║   
   ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝  ╚═══╝  ╚══════╝    ╚═════╝ ╚══════╝╚═════╝ ╚══════╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝   
+                   A script to debloat Brave brower and apply optimizations...
+    *Note I am working on a new version of this script to cover smoothbrain Win and Mac users.
 "
     echo "=== Brave Browser Optimization Menu ==="
     echo "1. Apply Default Optimizations (Recommended)"
@@ -409,7 +413,41 @@ EOF
                 sleep 2.5
                 ;;
             11)
-                log_message "Exiting..."
+                log_message "Exiting...
+     ⢀⣠⡴⠶⠟⠛⠛⠛⠶⠶⠤⣤⣀⠀⠀⠀⠀⣀⡤⠶⠶⠶⠶⢤⣤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⢠⣶⠟⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠻⣦⣤⠞⠋⠀⠀⠀⠀⠀⠀⠈⠙⠻⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⣴⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⡼⠃⠀⠀⠀⠀⠀⠀⢀⣠⣤⣴⠶⠦⠶⠶⣦⣤⣤⣽⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⣠⡾⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⢷⣤⣤⠤⠶⠞⠛⠛⠛⠛⠳⢦⣤⣘⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠘⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠻⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠻⢶⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠹⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⣀⣤⠶⠶⠶⠶⠶⠶⠶⠶⠾⠿⣿⣿⣛⠻⠶⣦⣝⣆⠀⠀⠀⠀⠀⠀⣀⣀⣀⣠⣤⣤⣽⣧⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⣠⡾⣋⣤⠶⠖⠚⠛⠛⠛⠛⠛⠓⠶⣦⣌⠙⠻⣦⡈⠛⢿⡄⠀⠀⠀⠀⣀⡭⠿⢒⣛⣛⣛⣙⡛⢿⣷⣦⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⢀⡾⠋⣾⠋⠁⠀⠀⠀⠀⠀⠀⣀⣀⣀⣀⣀⣙⣻⣶⣬⣟⢶⣄⢻⡄⠀⢰⠞⣫⡴⠟⠉⠉⠉⠉⠉⠙⢧⡙⡟⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠘⠛⠛⠛⠾⢿⣍⡉⠉⣽⣿⣻⣿⣿⣿⠿⣿⣏⠉⠉⠉⠹⣯⠻⣎⣷⠀⢀⣼⣿⡿⣿⣿⠿⣿⣽⠳⠦⣤⣻⡇⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⢠⡈⠛⢿⣿⣿⣿⣿⣿⣧⣀⣼⣿⠀⠀⠀⠀⢹⡄⠹⡇⢰⡟⣿⣿⣷⣿⣧⣀⣼⣿⠄⠀⠀⣹⡇⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣦⡀⠈⠙⠛⠿⢿⣿⣿⣿⠏⠀⠀⡀⣠⣤⣿⣤⠁⠾⣧⣿⣿⣷⣿⣿⣿⣿⣏⣤⣤⠾⢣⡇⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⠳⠶⠶⣤⣤⣄⣈⣉⣉⡉⠛⠛⢉⣁⣠⡾⠀⢠⣄⣈⡉⠉⠉⠉⠉⠉⣀⣈⣠⣶⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⢀⣀⣀⣤⣤⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠉⠉⠉⣩⣿⠋⠀⠀⠀⠀⠈⠛⢿⣿⡓⠃⠀⢠⣭⣭⡿⠙⣦⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠐⠛⠛⠉⠉⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡼⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣦⡀⠀⠀⠀⠀⠀⠘⣧⡀⠀⠀⠀⠀⠀⠀⠀
+⠀⢀⣴⣟⣛⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⡤⠶⠛⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠁⠀⠀⠀⠀⠀⢀⡟⢳⡀⠀⠀⠀⠀⠀⠀
+⠀⠈⢱⡏⡏⢹⣟⠷⢶⣤⣄⣀⠀⠀⠀⠀⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⠃⣼⠃⠀⠀⠀⠀⠀⠀
+⠀⠀⠈⠛⢶⣌⡙⠻⢶⣄⣈⠉⠉⠛⠛⠒⠶⠦⣤⣤⣀⣀⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⡾⣡⡞⠁⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠈⠙⠶⣤⣈⠉⠛⠻⠶⢶⣤⣤⣄⣀⣀⣀⣉⠉⠉⠙⠛⠓⠚⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⣡⡾⢿⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠛⠷⣤⣀⠀⠀⠀⠈⠉⠉⠉⠉⠛⠛⠳⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠖⠛⠋⠀⣼⠃⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⠻⠶⣤⣀⣀⢤⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣾⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠛⠛⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠖⠛⠉⡿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⠶⢶⣤⡀⠀⣼⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⡾⠟⠁⠀⠀⠘⠻⣾⣁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣤⡀⢀⣴⣿⡁⠀⠀⠀⠀⣀⠀⠀⠀⠉⠛⠶⣤⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⡟⠀⠈⢻⡟⠁⣸⡇⠀⣠⡶⢛⡿⢻⡗⣠⡾⠀⠀⠈⠷⣦⡀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢿⣄⡀⠈⠛⠲⣿⠒⠛⢁⣴⢟⣠⡿⠟⠁⠀⠀⠀⠀⠀⠈⢷⣄⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢷⡀⠀⠀⢸⣴⠞⢻⡷⠟⠉⠀⠀⠀⢀⡄⠀⠀⠀⠀⠀⠙⣷⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⣇⠀⠀⠘⢷⣤⣟⠀⠀⠀⠀⢀⡾⠋⠀⠀⠀⢀⡄⠀⠀⠻⣦⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀⠀⠀⠀⠉⠛⠳⣶⡄⢠⡿⠁⠀⠀⢀⡶⠛⠁⠀⣰⠀⢹⣇⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡾⢻⡄⠀⠀⠀⠀⠀⠀⠈⠙⠛⣧⠀⠀⣴⡟⠁⠀⢀⣴⠏⠀⠀⢻⡄
+Thank you for using Brave debloat, lets make Brave great again."
+                sleep 5.0
                 exit 0
                 ;;
             *)
