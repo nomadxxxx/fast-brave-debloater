@@ -40,16 +40,16 @@ A powerful optimization script that strips Brave Browser of bloat and enhances p
 
 Script allows you to choose your preferred privacy-respecting search engine:
 
-DuckDuckGo (privacy focused but collects data)
-Brave Search (privacy focused but collects data)
-SearXNG (recommended if you self-host)
-Whoogle (recommended if you self-host, but not as good as searXNG)
-Kagi (very good engine, but expensive)
-Yandex (ok for when doing sensitive searching behind VPN)
+- DuckDuckGo (privacy focused but collects data)
+- Brave Search (privacy focused but collects data)
+- SearXNG (recommended if you self-host)
+- Whoogle (recommended if you self-host, but not as good as searXNG)
+- Kagi (very good engine, but expensive)
+- Yandex (ok for when doing sensitive searching behind VPN or 9000 proxy)
 
 ...or worse options
-Google (not recommended)
-Bing (not recommended)
+- Google (not recommended)
+- Bing (not recommended)
 
 ### 🔧 Installation
 ```
