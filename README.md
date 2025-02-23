@@ -16,25 +16,25 @@ A powerful optimization script that strips Brave Browser of bloat and enhances p
 
 ## Improves Performance
 
-Enables GPU acceleration for smoother browsing
+✅ Enables GPU acceleration for smoother browsing
 
-Implements zero-copy optimization
+✅ Implements zero-copy optimization
 
-Activates Vulkan support
+✅ Activates Vulkan support
 
-Enables parallel downloading for faster speeds
+✅ Enables parallel downloading for faster speeds
 
-Optimizes memory usage
+✅ Optimizes memory usage
 
 ## Enhances Privacy
 
-Disables telemetry
+✅ Disables telemetry
 
-Removes analytics
+✅ Removes analytics
 
-Stops background data collection
+✅ Stops background data collection
 
-Disable Brave Sync (optional but recommended)
+✅ Disable Brave Sync (optional but recommended)
 
 ### Customizes for security
 
