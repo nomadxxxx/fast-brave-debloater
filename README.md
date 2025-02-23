@@ -40,10 +40,12 @@ Disable Brave Sync (optional but recommended)
 
 Script allows you to choose your preferred privacy-respecting search engine:
 
-DuckDuckGo
-SearXNG (recommended)
-Whoogle (good, but not as good as searXNG)
-Kagi (good, but expensive)
+DuckDuckGo (privacy focused but collects data)
+Brave Search (privacy focused but collects data)
+SearXNG (recommended if you self-host)
+Whoogle (recommended if you self-host, but not as good as searXNG)
+Kagi (very good engine, but expensive)
+Yandex (ok for when doing sensitive searching behind VPN)
 
 ...or worse options
 Google (not recommended)
