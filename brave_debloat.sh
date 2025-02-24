@@ -95,6 +95,7 @@ apply_brave_policies() {
     "BookmarksBarEnabled": true,
     "SyncDisabled": true,
     "BraveSyncEnabled": false
+    "DnsOverHttpsMode": "automatic"
 }
 EOF
 
