@@ -87,6 +87,10 @@ Select specific customizations:
 - Toggle Memory Saver
   --Automatically frees memory from inactive tabs
 
+### To do
+- [ ] Implement experimental ad-blocking feature 
+- [ ] Finish and test powershell version for windows
+- [ ] Make a script compatible with macOS
 
 ⚠️ Important Notes
 - Requires root privileges. 
