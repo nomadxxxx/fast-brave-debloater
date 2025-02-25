@@ -298,7 +298,15 @@ EOF
     done
 }
 
-# Enable advanced ad blocking in the default optimizations
+# Function to apply default optimizations
+apply_default_optimizations() {
+    log_message "Applying default optimizations..."
+    
+    apply_brave_policies
+    create_desktop_entry
+    modify_dashboard_preferences
+    
+   # Enable advanced ad blocking in the default optimizations
 log_message "Enabling Advanced Ad Blocking..."
 # Create policy file
 cat > "${POLICY_DIR}/adblock.json" << EOF
@@ -320,17 +328,17 @@ if [[ -f "${BRAVE_PREFS}" ]]; then
         .brave.ad_block.regional_filters["brave-experimental"] = true' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
     mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
 fi
-
-# Enable the flag in Local State
+    
+    # Enable the flag in Local State
 LOCAL_STATE="${PREFERENCES_DIR%/*}/Local State"
 if [[ -f "${LOCAL_STATE}" ]]; then
     # Check if the file contains the browser.enabled_labs_experiments key
     if jq -e '.browser.enabled_labs_experiments' "${LOCAL_STATE}" >/dev/null 2>&1; then
         # Add the flag if it doesn't exist
-        jq '.browser.enabled_labs_experiments += ["brave-adblock-experimental-list-default"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
+        jq '.browser.enabled_labs_experiments += ["brave-adblock-experimental-list-default@1"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
     else
         # Create the key if it doesn't exist
-        jq '.browser = (.browser // {}) | .browser.enabled_labs_experiments = ["brave-adblock-experimental-list-default"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
+        jq '.browser = (.browser // {}) | .browser.enabled_labs_experiments = ["brave-adblock-experimental-list-default@1"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
     fi
     mv "${LOCAL_STATE}.tmp" "${LOCAL_STATE}"
     log_message "Enabled advanced ad blocking flag in browser flags"
