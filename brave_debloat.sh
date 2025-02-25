@@ -523,7 +523,10 @@ EOF
                 # Update preferences
                 jq '.brave = (.brave // {}) | 
                     .brave.shields = (.brave.shields // {}) |
-                    .brave.shields.experimental_filters_enabled = false' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
+                    .brave.shields.experimental_filters_enabled = false |
+                    .brave.adblock = (.brave.adblock // {}) |
+                    .brave.adblock.regional_filters = (.brave.adblock.regional_filters // {}) |
+                    .brave.adblock.regional_filters["brave-experimental"] = false' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
                 mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
                 
                 # Disable the flag in Local State
@@ -554,11 +557,14 @@ EOF
 EOF
                 chmod 644 "${POLICY_DIR}/adblock.json"
                 
-                # Update preferences
+                # Update preferences with direct regional filter modification
                 jq '.brave = (.brave // {}) | 
                     .brave.shields = (.brave.shields // {}) |
                     .brave.shields.experimental_filters_enabled = true |
-                    .brave.shields.advanced_view_enabled = true' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
+                    .brave.shields.advanced_view_enabled = true |
+                    .brave.adblock = (.brave.adblock // {}) |
+                    .brave.adblock.regional_filters = (.brave.adblock.regional_filters // {}) |
+                    .brave.adblock.regional_filters["brave-experimental"] = true' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
                 mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
                 
                 # Enable the flag in Local State
@@ -616,4 +622,3 @@ fi
 
 # Run main script
 main
-PERFORMANCE_FLAGS="--enable-gpu-rasterization --enable-zero-copy --ignore-gpu-blocklist --enable-vulkan --enable-parallel-downloading --enable-features=BraveAdblockExperimental"
