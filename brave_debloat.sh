@@ -511,7 +511,10 @@ EOF
                     .brave.shields = (.brave.shields // {}) |
                     .brave.shields.experimental_filters_enabled = false' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
                 mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
+                # Update desktop entry to remove flag
+                sed -i 's/--enable-features=BraveExperimentalAdblock//' "/usr/share/applications/brave-debloat.desktop"
                 log_message "Experimental Ad Blocking has been DISABLED"
+                log_message "Please COMPLETELY QUIT Brave browser and restart for changes to take effect"
             fi
         else
             log_message "Experimental Ad Blocking is currently DISABLED"
@@ -521,7 +524,7 @@ EOF
                 cat > "${POLICY_DIR}/adblock.json" << EOF
 {
     "ShieldsAdvancedView": true,
-    "experimental_filters_enabled": true
+    "BraveExperimentalAdblockEnabled": true
 }
 EOF
                 chmod 644 "${POLICY_DIR}/adblock.json"
@@ -531,15 +534,20 @@ EOF
                     .brave.shields.experimental_filters_enabled = true |
                     .brave.shields.advanced_view_enabled = true' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
                 mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
+                # Update desktop entry to add flag
+                if grep -q "Exec=brave" "/usr/share/applications/brave-debloat.desktop"; then
+                    sed -i 's/Exec=brave/Exec=brave --enable-features=BraveExperimentalAdblock/' "/usr/share/applications/brave-debloat.desktop"
+                fi
                 log_message "Experimental Ad Blocking has been ENABLED"
+                log_message "Please COMPLETELY QUIT Brave browser and restart for changes to take effect"
             fi
         fi
-        log_message "Please restart Brave browser for changes to take effect"
     else
         log_error "Preferences file not found"
     fi
     sleep 2.5
     ;;
+
             12)
                 log_message "Exiting...
      ⢀⣠⡴⠶⠟⠛⠛⠛⠶⠶⠤⣤⣀⠀⠀⠀⠀⣀⡤⠶⠶⠶⠶⢤⣤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
