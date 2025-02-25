@@ -311,8 +311,8 @@ apply_default_optimizations() {
     # Create policy file
     cat > "${POLICY_DIR}/adblock.json" << EOF
 {
-    "ShieldsAdvancedView": true,
-    "BraveExperimentalAdblockEnabled": true
+  "ShieldsAdvancedView": true,
+  "BraveExperimentalAdblockEnabled": true
 }
 EOF
     chmod 644 "${POLICY_DIR}/adblock.json"
