@@ -69,10 +69,11 @@ locate_brave_files() {
     mkdir -p "${PREFERENCES_DIR}"
     
     # Copy icon if it exists in current directory
-if [[ -f "brave_icon.png" ]]; then
-    cp brave_icon.png /usr/share/brave/
-    chmod 644 /usr/share/brave/brave_icon.png
-fi
+    if [[ -f "brave_icon.png" ]]; then
+        cp brave_icon.png /usr/share/brave/
+        chmod 644 /usr/share/brave/brave_icon.png
+    fi
+    
     # Set the preferences file path
     BRAVE_PREFS="${PREFERENCES_DIR}/Preferences"
     
@@ -80,7 +81,6 @@ fi
     log_message "Policy directory: ${POLICY_DIR}"
     log_message "Preferences directory: ${PREFERENCES_DIR}"
 }
-
 # Function to create desktop entry
 create_desktop_entry() {
     log_message "Creating desktop entry for Brave Debloat..."
@@ -166,7 +166,6 @@ modify_dashboard_preferences() {
     
     log_message "Modified dashboard preferences"
 }
-
 # Function to set search engine
 set_search_engine() {
     while true; do
@@ -327,11 +326,25 @@ EOF
         mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
     fi
     
+    # Enable the flag in Local State
+    LOCAL_STATE="${PREFERENCES_DIR%/*}/Local State"
+    if [[ -f "${LOCAL_STATE}" ]]; then
+        # Check if the file contains the browser.enabled_labs_experiments key
+        if jq -e '.browser.enabled_labs_experiments' "${LOCAL_STATE}" >/dev/null 2>&1; then
+            # Add the flag if it doesn't exist
+            jq '.browser.enabled_labs_experiments += ["brave-adblock-experimental-list-default@1"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
+        else
+            # Create the key if it doesn't exist
+            jq '.browser = (.browser // {}) | .browser.enabled_labs_experiments = ["brave-adblock-experimental-list-default@1"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
+        fi
+        mv "${LOCAL_STATE}.tmp" "${LOCAL_STATE}"
+        log_message "Enabled experimental adblock flag in browser flags"
+    fi
+    
     log_message "Default optimizations applied successfully"
     log_message "Please restart Brave browser for changes to take effect"
 }
-
-# Show menu function with explanations
+# Show menu function
 show_menu() {
     clear
     echo "
@@ -364,7 +377,7 @@ show_menu() {
     echo "6. Disable Background Running"
     echo "   WARNING: May cause instability"
     echo
-        echo "7. Toggle Memory Saver"
+    echo "7. Toggle Memory Saver"
     echo "   Reduces memory usage by suspending inactive tabs"
     echo
     echo "8. UI Improvements"
@@ -498,122 +511,91 @@ EOF
                 sleep 2.5
                 ;;
             11)
-    log_message "Checking current experimental ad blocking status..."
-    if [[ -f "${BRAVE_PREFS}" ]]; then
-        if jq -e '.brave.shields.experimental_filters_enabled // false' "${BRAVE_PREFS}" >/dev/null 2>&1; then
-            log_message "Experimental Ad Blocking is currently ENABLED"
-            read -p "Would you like to disable it? (y/n): " disable_choice
-            if [[ "${disable_choice}" =~ ^[Yy]$ ]]; then
-                # Remove policy file
-                rm -f "${POLICY_DIR}/adblock.json"
-                
-                # Update preferences
-                jq '.brave = (.brave // {}) | 
-                    .brave.shields = (.brave.shields // {}) |
-                    .brave.shields.experimental_filters_enabled = false' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
-                mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
-                
-                # Disable the flag in Local State
-                LOCAL_STATE="${PREFERENCES_DIR%/*}/Local State"
-                if [[ -f "${LOCAL_STATE}" ]]; then
-                    jq 'del(.browser.enabled_labs_experiments[] | select(. == "brave-adblock-experimental-list-default@1"))' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
-                    mv "${LOCAL_STATE}.tmp" "${LOCAL_STATE}"
-                fi
-                
-                # Remove flag from desktop entry
-                if grep -q -- "--enable-features=BraveAdblockExperimental" "/usr/share/applications/brave-debloat.desktop"; then
-                    sed -i 's/--enable-features=BraveAdblockExperimental//' "/usr/share/applications/brave-debloat.desktop"
-                    log_message "Removed experimental adblock flag from desktop entry"
-                fi
-                
-                log_message "Experimental Ad Blocking has been DISABLED"
-            fi
-        else
-            log_message "Experimental Ad Blocking is currently DISABLED"
-            read -p "Would you like to enable it? (y/n): " enable_choice
-            if [[ "${enable_choice}" =~ ^[Yy]$ ]]; then
-                # Create policy file
-                cat > "${POLICY_DIR}/adblock.json" << EOF
+                log_message "Checking current experimental ad blocking status..."
+                if [[ -f "${BRAVE_PREFS}" ]]; then
+                    if jq -e '.brave.shields.experimental_filters_enabled // false' "${BRAVE_PREFS}" >/dev/null 2>&1; then
+                        log_message "Experimental Ad Blocking is currently ENABLED"
+                        read -p "Would you like to disable it? (y/n): " disable_choice
+                        if [[ "${disable_choice}" =~ ^[Yy]$ ]]; then
+                            # Remove policy file
+                            rm -f "${POLICY_DIR}/adblock.json"
+                            
+                            # Update preferences
+                            jq '.brave = (.brave // {}) | 
+                                .brave.shields = (.brave.shields // {}) |
+                                .brave.shields.experimental_filters_enabled = false' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
+                            mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
+                            
+                            # Disable the flag in Local State
+                            LOCAL_STATE="${PREFERENCES_DIR%/*}/Local State"
+                            if [[ -f "${LOCAL_STATE}" ]]; then
+                                jq 'del(.browser.enabled_labs_experiments[] | select(. == "brave-adblock-experimental-list-default@1"))' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
+                                mv "${LOCAL_STATE}.tmp" "${LOCAL_STATE}"
+                            fi
+                            
+                            # Remove flag from desktop entry
+                            if grep -q -- "--enable-features=BraveAdblockExperimental" "/usr/share/applications/brave-debloat.desktop"; then
+                                sed -i 's/--enable-features=BraveAdblockExperimental//' "/usr/share/applications/brave-debloat.desktop"
+                                log_message "Removed experimental adblock flag from desktop entry"
+                            fi
+                            
+                            log_message "Experimental Ad Blocking has been DISABLED"
+                        fi
+                    else
+                        log_message "Experimental Ad Blocking is currently DISABLED"
+                        read -p "Would you like to enable it? (y/n): " enable_choice
+                        if [[ "${enable_choice}" =~ ^[Yy]$ ]]; then
+                            # Create policy file
+                            cat > "${POLICY_DIR}/adblock.json" << EOF
 {
     "ShieldsAdvancedView": true,
     "BraveExperimentalAdblockEnabled": true
 }
 EOF
-                chmod 644 "${POLICY_DIR}/adblock.json"
-                
-                # Update preferences
-                jq '.brave = (.brave // {}) | 
-                    .brave.shields = (.brave.shields // {}) |
-                    .brave.shields.experimental_filters_enabled = true |
-                    .brave.shields.advanced_view_enabled = true' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
-                mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
-                
-                # Enable the flag in Local State
-                LOCAL_STATE="${PREFERENCES_DIR%/*}/Local State"
-                if [[ -f "${LOCAL_STATE}" ]]; then
-                    # Check if the file contains the browser.enabled_labs_experiments key
-                    if jq -e '.browser.enabled_labs_experiments' "${LOCAL_STATE}" >/dev/null 2>&1; then
-                        # Add the flag if it doesn't exist
-                        jq '.browser.enabled_labs_experiments += ["brave-adblock-experimental-list-default@1"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
-                    else
-                        # Create the key if it doesn't exist
-                        jq '.browser = (.browser // {}) | .browser.enabled_labs_experiments = ["brave-adblock-experimental-list-default@1"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
+                            chmod 644 "${POLICY_DIR}/adblock.json"
+                            
+                            # Update preferences
+                            jq '.brave = (.brave // {}) | 
+                                .brave.shields = (.brave.shields // {}) |
+                                .brave.shields.experimental_filters_enabled = true |
+                                .brave.shields.advanced_view_enabled = true' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
+                            mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
+                            
+                            # Enable the flag in Local State
+                            LOCAL_STATE="${PREFERENCES_DIR%/*}/Local State"
+                            if [[ -f "${LOCAL_STATE}" ]]; then
+                                # Check if the file contains the browser.enabled_labs_experiments key
+                                if jq -e '.browser.enabled_labs_experiments' "${LOCAL_STATE}" >/dev/null 2>&1; then
+                                    # Add the flag if it doesn't exist
+                                    jq '.browser.enabled_labs_experiments += ["brave-adblock-experimental-list-default@1"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
+                                else
+                                    # Create the key if it doesn't exist
+                                    jq '.browser = (.browser // {}) | .browser.enabled_labs_experiments = ["brave-adblock-experimental-list-default@1"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
+                                fi
+                                mv "${LOCAL_STATE}.tmp" "${LOCAL_STATE}"
+                                log_message "Enabled experimental adblock flag in browser flags"
+                            fi
+                            
+                            # Add flag to desktop entry
+                            if grep -q "Exec=brave" "/usr/share/applications/brave-debloat.desktop"; then
+                                if ! grep -q -- "--enable-features=BraveAdblockExperimental" "/usr/share/applications/brave-debloat.desktop"; then
+                                    sed -i 's/Exec=brave/Exec=brave --enable-features=BraveAdblockExperimental/' "/usr/share/applications/brave-debloat.desktop"
+                                    log_message "Added experimental adblock flag to desktop entry"
+                                fi
+                            fi
+                            
+                            log_message "Experimental Ad Blocking has been ENABLED"
+                        fi
                     fi
-                    mv "${LOCAL_STATE}.tmp" "${LOCAL_STATE}"
-                    log_message "Enabled experimental adblock flag in browser flags"
+                    log_message "Please COMPLETELY QUIT Brave browser and restart for changes to take effect"
+                    log_message "After restart, check brave://components/ and update 'Brave Ad Block Updater' if needed"
+                else
+                    log_error "Preferences file not found"
                 fi
-                
-                # Add flag to desktop entry
-                if grep -q "Exec=brave" "/usr/share/applications/brave-debloat.desktop"; then
-                    if ! grep -q -- "--enable-features=BraveAdblockExperimental" "/usr/share/applications/brave-debloat.desktop"; then
-                        sed -i 's/Exec=brave/Exec=brave --enable-features=BraveAdblockExperimental/' "/usr/share/applications/brave-debloat.desktop"
-                        log_message "Added experimental adblock flag to desktop entry"
-                    fi
-                fi
-                
-                log_message "Experimental Ad Blocking has been ENABLED"
-            fi
-        fi
-        log_message "Please COMPLETELY QUIT Brave browser and restart for changes to take effect"
-        log_message "After restart, check brave://components/ and update 'Brave Ad Block Updater' if needed"
-    else
-        log_error "Preferences file not found"
-    fi
-    sleep 4
-    ;;
+                sleep 4
+                ;;
+            12)
                 log_message "Exiting...
-     ⢀⣠⡴⠶⠟⠛⠛⠛⠶⠶⠤⣤⣀⠀⠀⠀⠀⣀⡤⠶⠶⠶⠶⢤⣤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⢠⣶⠟⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠻⣦⣤⠞⠋⠀⠀⠀⠀⠀⠀⠈⠙⠻⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⣴⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⡼⠃⠀⠀⠀⠀⠀⠀⢀⣠⣤⣴⠶⠦⠶⠶⣦⣤⣤⣽⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⣠⡾⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⢷⣤⣤⠤⠶⠞⠛⠛⠛⠛⠳⢦⣤⣘⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠘⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠻⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠻⢶⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠹⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⣀⣤⠶⠶⠶⠶⠶⠶⠶⠶⠾⠿⣿⣿⣛⠻⠶⣦⣝⣆⠀⠀⠀⠀⠀⠀⣀⣀⣀⣠⣤⣤⣽⣧⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⣠⡾⣋⣤⠶⠖⠚⠛⠛⠛⠛⠛⠓⠶⣦⣌⠙⠻⣦⡈⠛⢿⡄⠀⠀⠀⠀⣀⡭⠿⢒⣛⣛⣛⣙⡛⢿⣷⣦⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⢀⡾⠋⣾⠋⠁⠀⠀⠀⠀⠀⠀⣀⣀⣀⣀⣀⣙⣻⣶⣬⣟⢶⣄⢻⡄⠀⢰⠞⣫⡴⠟⠉⠉⠉⠉⠉⠙⢧⡙⡟⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠘⠛⠛⠛⠾⢿⣍⡉⠉⣽⣿⣻⣿⣿⣿⠿⣿⣏⠉⠉⠉⠹⣯⠻⣎⣷⠀⢀⣼⣿⡿⣿⣿⠿⣿⣽⠳⠦⣤⣻⡇⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⢠⡈⠛⢿⣿⣿⣿⣿⣿⣧⣀⣼⣿⠀⠀⠀⠀⢹⡄⠹⡇⢰⡟⣿⣿⣷⣿⣧⣀⣼⣿⠄⠀⠀⣹⡇⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣦⡀⠈⠙⠛⠿⢿⣿⣿⣿⠏⠀⠀⡀⣠⣤⣿⣤⠁⠾⣧⣿⣿⣷⣿⣿⣿⣿⣏⣤⣤⠾⢣⡇⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⠳⠶⠶⣤⣤⣄⣈⣉⣉⡉⠛⠛⢉⣁⣠⡾⠀⢠⣄⣈⡉⠉⠉⠉⠉⠉⣀⣈⣠⣶⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⢀⣀⣀⣤⣤⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠉⠉⠉⣩⣿⠋⠀⠀⠀⠀⠈⠛⢿⣿⡓⠃⠀⢠⣭⣭⡿⠙⣦⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠐⠛⠛⠉⠉⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡼⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣦⡀⠀⠀⠀⠀⠀⠘⣧⡀⠀⠀⠀⠀⠀⠀⠀
-⠀⢀⣴⣟⣛⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⡤⠶⠛⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠁⠀⠀⠀⠀⠀⢀⡟⢳⡀⠀⠀⠀⠀⠀⠀
-⠀⠈⢱⡏⡏⢹⣟⠷⢶⣤⣄⣀⠀⠀⠀⠀⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⠃⣼⠃⠀⠀⠀⠀⠀⠀
-⠀⠀⠈⠛⢶⣌⡙⠻⢶⣄⣈⠉⠉⠛⠛⠒⠶⠦⣤⣤⣀⣀⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⡾⣡⡞⠁⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠈⠙⠶⣤⣈⠉⠛⠻⠶⢶⣤⣤⣄⣀⣀⣀⣉⠉⠉⠙⠛⠓⠚⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⣡⡾⢿⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠛⠷⣤⣀⠀⠀⠀⠈⠉⠉⠉⠉⠛⠛⠳⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠖⠛⠋⠀⣼⠃⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⠻⠶⣤⣀⣀⢤⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣾⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠛⠛⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠶⠖⠛⠉⡿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⠶⢶⣤⡀⠀⣼⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⡾⠟⠁⠀⠀⠘⠻⣾⣁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣤⡀⢀⣴⣿⡁⠀⠀⠀⠀⣀⠀⠀⠀⠉⠛⠶⣤⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⡟⠀⠈⢻⡟⠁⣸⡇⠀⣠⡶⢛⡿⢻⡗⣠⡾⠀⠀⠈⠷⣦⡀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢿⣄⡀⠈⠛⠲⣿⠒⠛⢁⣴⢟⣠⡿⠟⠁⠀⠀⠀⠀⠀⠈⢷⣄⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢷⡀⠀⠀⢸⣴⠞⢻⡷⠟⠉⠀⠀⠀⢀⡄⠀⠀⠀⠀⠀⠙⣷⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⣇⠀⠀⠘⢷⣤⣟⠀⠀⠀⠀⢀⡾⠋⠀⠀⠀⢀⡄⠀⠀⠻⣦⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀⠀⠀⠀⠉⠛⠳⣶⡄⢠⡿⠁⠀⠀⢀⡶⠛⠁⠀⣰⠀⢹⣇⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡾⢻⡄⠀⠀⠀⠀⠀⠀⠈⠙⠛⣧⠀⠀⣴⡟⠁⠀⢀⣴⠏⠀⠀⢻⡄
 Thank you for using Brave debloat, lets make Brave great again."
                 sleep 5.0
                 exit 0
