@@ -306,43 +306,44 @@ apply_default_optimizations() {
     create_desktop_entry
     modify_dashboard_preferences
     
-   # Enable advanced ad blocking in the default optimizations
-log_message "Enabling Advanced Ad Blocking..."
-# Create policy file
-cat > "${POLICY_DIR}/adblock.json" << EOF
+    # Enable advanced ad blocking in the default optimizations
+    log_message "Enabling Advanced Ad Blocking..."
+    # Create policy file
+    cat > "${POLICY_DIR}/adblock.json" << EOF
 {
     "ShieldsAdvancedView": true,
     "BraveExperimentalAdblockEnabled": true
 }
 EOF
-chmod 644 "${POLICY_DIR}/adblock.json"
-
-# Also modify preferences
-if [[ -f "${BRAVE_PREFS}" ]]; then
-    jq '.brave = (.brave // {}) | 
-        .brave.shields = (.brave.shields // {}) |
-        .brave.shields.advanced_view_enabled = true |
-        .brave.shields.experimental_filters_enabled = true |
-        .brave.ad_block = (.brave.ad_block // {}) |
-        .brave.ad_block.regional_filters = (.brave.ad_block.regional_filters // {}) |
-        .brave.ad_block.regional_filters["brave-experimental"] = true' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
-    mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
-fi
+    chmod 644 "${POLICY_DIR}/adblock.json"
+    
+    # Also modify preferences
+    if [[ -f "${BRAVE_PREFS}" ]]; then
+        jq '.brave = (.brave // {}) | 
+            .brave.shields = (.brave.shields // {}) |
+            .brave.shields.advanced_view_enabled = true |
+            .brave.shields.experimental_filters_enabled = true |
+            .brave.ad_block = (.brave.ad_block // {}) |
+            .brave.ad_block.regional_filters = (.brave.ad_block.regional_filters // {}) |
+            .brave.ad_block.regional_filters["564C3B75-8731-404C-AD7C-5683258BA0B0"] = {"enabled": true}' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
+        mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
+    fi
     
     # Enable the flag in Local State
-LOCAL_STATE="${PREFERENCES_DIR%/*}/Local State"
-if [[ -f "${LOCAL_STATE}" ]]; then
-    # Check if the file contains the browser.enabled_labs_experiments key
-    if jq -e '.browser.enabled_labs_experiments' "${LOCAL_STATE}" >/dev/null 2>&1; then
-        # Add the flag if it doesn't exist
-        jq '.browser.enabled_labs_experiments += ["brave-adblock-experimental-list-default@1"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
-    else
-        # Create the key if it doesn't exist
-        jq '.browser = (.browser // {}) | .browser.enabled_labs_experiments = ["brave-adblock-experimental-list-default@1"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
+    LOCAL_STATE="${PREFERENCES_DIR%/*}/Local State"
+    if [[ -f "${LOCAL_STATE}" ]]; then
+        # Check if the file contains the browser.enabled_labs_experiments key
+        if jq -e '.browser.enabled_labs_experiments' "${LOCAL_STATE}" >/dev/null 2>&1; then
+            # Add the flag if it doesn't exist
+            jq '.browser.enabled_labs_experiments += ["brave-adblock-experimental-list-default@1"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
+        else
+            # Create the key if it doesn't exist
+            jq '.browser = (.browser // {}) | .browser.enabled_labs_experiments = ["brave-adblock-experimental-list-default@1"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
+        fi
+        mv "${LOCAL_STATE}.tmp" "${LOCAL_STATE}"
+        log_message "Enabled advanced ad blocking flag in browser flags"
     fi
-    mv "${LOCAL_STATE}.tmp" "${LOCAL_STATE}"
-    log_message "Enabled advanced ad blocking flag in browser flags"
-fi 
+    
     log_message "Default optimizations applied successfully"
     log_message "Please restart Brave browser for changes to take effect"
 }
@@ -391,8 +392,8 @@ show_menu() {
     echo "10. Remove Brave Rewards/VPN/Wallet"
     echo "    Disables cryptocurrency and rewards features"
     echo
-    echo "11. Toggle Experimental Ad Blocking (ON/OFF)"
-    echo "    Enhanced ad blocking - Current status will be shown"
+    echo "11. Toggle Experimental Ad Blocking (experimental)"
+    echo "    Enhanced ad blocking - Will check current status"
     echo
     echo "12. Exit"
     echo
@@ -515,7 +516,7 @@ EOF
             11)
     log_message "Checking current advanced ad blocking status..."
     if [[ -f "${BRAVE_PREFS}" ]]; then
-        if jq -e '.brave.ad_block.regional_filters["brave-experimental"] // false' "${BRAVE_PREFS}" >/dev/null 2>&1; then
+        if jq -e '.brave.ad_block.regional_filters["564C3B75-8731-404C-AD7C-5683258BA0B0"].enabled // false' "${BRAVE_PREFS}" >/dev/null 2>&1; then
             log_message "Advanced Ad Blocking is currently ENABLED"
             read -p "Would you like to disable it? (y/n): " disable_choice
             if [[ "${disable_choice}" =~ ^[Yy]$ ]]; then
@@ -528,13 +529,13 @@ EOF
                     .brave.shields.experimental_filters_enabled = false |
                     .brave.ad_block = (.brave.ad_block // {}) |
                     .brave.ad_block.regional_filters = (.brave.ad_block.regional_filters // {}) |
-                    .brave.ad_block.regional_filters["brave-experimental"] = false' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
+                    .brave.ad_block.regional_filters["564C3B75-8731-404C-AD7C-5683258BA0B0"] = {"enabled": false}' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
                 mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
                 
                 # Disable the flag in Local State
                 LOCAL_STATE="${PREFERENCES_DIR%/*}/Local State"
                 if [[ -f "${LOCAL_STATE}" ]]; then
-                    jq 'del(.browser.enabled_labs_experiments[] | select(. == "brave-adblock-experimental-list-default"))' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
+                    jq 'del(.browser.enabled_labs_experiments[] | select(. == "brave-adblock-experimental-list-default@1"))' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
                     mv "${LOCAL_STATE}.tmp" "${LOCAL_STATE}"
                 fi
                 
@@ -559,14 +560,14 @@ EOF
 EOF
                 chmod 644 "${POLICY_DIR}/adblock.json"
                 
-                # Update preferences with direct regional filter modification
+                # Update preferences with direct UUID modification
                 jq '.brave = (.brave // {}) | 
                     .brave.shields = (.brave.shields // {}) |
                     .brave.shields.experimental_filters_enabled = true |
                     .brave.shields.advanced_view_enabled = true |
                     .brave.ad_block = (.brave.ad_block // {}) |
                     .brave.ad_block.regional_filters = (.brave.ad_block.regional_filters // {}) |
-                    .brave.ad_block.regional_filters["brave-experimental"] = true' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
+                    .brave.ad_block.regional_filters["564C3B75-8731-404C-AD7C-5683258BA0B0"] = {"enabled": true}' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
                 mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
                 
                 # Enable the flag in Local State
@@ -575,10 +576,10 @@ EOF
                     # Check if the file contains the browser.enabled_labs_experiments key
                     if jq -e '.browser.enabled_labs_experiments' "${LOCAL_STATE}" >/dev/null 2>&1; then
                         # Add the flag if it doesn't exist
-                        jq '.browser.enabled_labs_experiments += ["brave-adblock-experimental-list-default"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
+                        jq '.browser.enabled_labs_experiments += ["brave-adblock-experimental-list-default@1"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
                     else
                         # Create the key if it doesn't exist
-                        jq '.browser = (.browser // {}) | .browser.enabled_labs_experiments = ["brave-adblock-experimental-list-default"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
+                        jq '.browser = (.browser // {}) | .browser.enabled_labs_experiments = ["brave-adblock-experimental-list-default@1"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
                     fi
                     mv "${LOCAL_STATE}.tmp" "${LOCAL_STATE}"
                     log_message "Enabled advanced ad blocking flag in browser flags"
