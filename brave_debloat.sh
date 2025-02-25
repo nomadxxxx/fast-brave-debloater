@@ -24,28 +24,62 @@ log_error() {
 locate_brave_files() {
     log_message "Locating Brave browser..."
     
-    BRAVE_EXEC="$(command -v brave || command -v brave-browser || command -v brave-browser-stable)"
-    if [[ -z "${BRAVE_EXEC}" ]]; then
-        log_error "Brave browser executable not found. Please install Brave first."
-        exit 1
+    # Check for Flatpak installation first
+    if command -v flatpak &> /dev/null; then
+        BRAVE_FLATPAK=$(flatpak list --app | grep com.brave.Browser)
+        if [[ -n "${BRAVE_FLATPAK}" ]]; then
+            log_message "Flatpak Brave installation detected"
+            BRAVE_EXEC="flatpak run com.brave.Browser"
+            PREFERENCES_DIR="${HOME}/.var/app/com.brave.Browser/config/BraveSoftware/Brave-Browser/Default"
+            POLICY_DIR="${HOME}/.var/app/com.brave.Browser/config/BraveSoftware/Brave-Browser/policies/managed"
+            IS_FLATPAK=true
+        fi
     fi
-    
-    BRAVE_REAL_PATH="$(readlink -f "${BRAVE_EXEC}")"
-    POLICY_DIR="/etc/brave/policies/managed"
-    PREFERENCES_DIR="${HOME}/.config/BraveSoftware/Brave-Browser/Default"
-    
+
+    # If not Flatpak, check standard installations
+    if [[ -z "${BRAVE_EXEC}" ]]; then
+        BRAVE_EXEC="$(command -v brave || command -v brave-browser || command -v brave-browser-stable)"
+        if [[ -z "${BRAVE_EXEC}" ]]; then
+            log_message "Brave browser not found. Would you like to install it? (y/n)"
+            read -p "> " install_choice
+            
+            if [[ "${install_choice}" =~ ^[Yy]$ ]]; then
+                log_message "Installing Brave using official install script..."
+                curl -fsS https://dl.brave.com/install.sh | sh
+                
+                # Recheck for Brave after installation
+                BRAVE_EXEC="$(command -v brave-browser || command -v brave || command -v brave-browser-stable)"
+                if [[ -z "${BRAVE_EXEC}" ]]; then
+                    log_error "Installation failed or Brave not found in PATH"
+                    exit 1
+                fi
+            else
+                log_error "Brave browser is required for this script"
+                exit 1
+            fi
+        fi
+        PREFERENCES_DIR="${HOME}/.config/BraveSoftware/Brave-Browser/Default"
+        POLICY_DIR="/etc/brave/policies/managed"
+        IS_FLATPAK=false
+    fi
+
+    # Create necessary directories
     mkdir -p "${POLICY_DIR}"
-    mkdir -p "/usr/share/brave"
+    mkdir -p "${PREFERENCES_DIR}"
     
     # Copy icon if it exists in current directory
-    if [[ -f "brave_icon.png" ]]; then
-        cp brave_icon.png /usr/share/brave/
-        chmod 644 /usr/share/brave/brave_icon.png
-    fi
+if [[ -f "brave_icon.png" ]]; then
+    cp brave_icon.png /usr/share/brave/
+    chmod 644 /usr/share/brave/brave_icon.png
+fi
+    # Set the preferences file path
+    BRAVE_PREFS="${PREFERENCES_DIR}/Preferences"
     
-    log_message "Brave executable found at: ${BRAVE_REAL_PATH}"
+    log_message "Brave executable: ${BRAVE_EXEC}"
     log_message "Policy directory: ${POLICY_DIR}"
+    log_message "Preferences directory: ${PREFERENCES_DIR}"
 }
+
 # Function to create desktop entry
 create_desktop_entry() {
     log_message "Creating desktop entry for Brave Debloat..."
@@ -104,7 +138,7 @@ EOF
 
 # Function to modify dashboard preferences
 modify_dashboard_preferences() {
-    local preferences_file="${PREFERENCES_DIR}/Preferences"
+    local preferences_file="${BRAVE_PREFS}"
     
     # Ensure the Preferences directory exists
     mkdir -p "${PREFERENCES_DIR}"
@@ -131,6 +165,7 @@ modify_dashboard_preferences() {
     
     log_message "Modified dashboard preferences"
 }
+
 # Function to set search engine
 set_search_engine() {
     while true; do
@@ -271,22 +306,34 @@ apply_default_optimizations() {
     create_desktop_entry
     modify_dashboard_preferences
     
+    # Enable experimental ad blocking in the default optimizations
+    log_message "Enabling Experimental Ad Blocking..."
+    if [[ -f "${BRAVE_PREFS}" ]]; then
+        jq '.brave = (.brave // {}) | 
+            .brave.shields = (.brave.shields // {}) |
+            .brave.shields.advanced_view_enabled = true |
+            .brave.shields.experimental_filters_enabled = true' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
+        mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
+    fi
+    
     log_message "Default optimizations applied successfully"
     log_message "Please restart Brave browser for changes to take effect"
 }
+
 # Show menu function with explanations
 show_menu() {
     clear
     echo "
-  ██████╗ ██████╗  █████╗ ██╗   ██╗███████╗    ██████╗ ███████╗██████╗ ██╗      ██████╗  █████╗ ████████╗
-  ██╔══██╗██╔══██╗██╔══██╗██║   ██║██╔════╝    ██╔══██╗██╔════╝██╔══██╗██║     ██╔═══██╗██╔══██╗╚══██╔══╝
-  ██████╔╝██████╔╝███████║██║   ██║█████╗      ██║  ██║█████╗  ██████╔╝██║     ██║   ██║███████║   ██║   
-  ██╔══██╗██╔══██╗██╔══██║╚██╗ ██╔╝██╔══╝      ██║  ██║██╔══╝  ██╔══██╗██║     ██║   ██║██╔══██║   ██║   
-  ██████╔╝██║  ██║██║  ██║ ╚████╔╝ ███████╗    ██████╔╝███████╗██████╔╝███████╗╚██████╔╝██║  ██║   ██║   
-  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝  ╚═══╝  ╚══════╝    ╚═════╝ ╚══════╝╚═════╝ ╚══════╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝   
-                   A script to debloat Brave brower and apply optimizations...
-    *Note I am working on a new version of this script to cover smoothbrain Win and Mac users.
+██████╗ ██████╗  █████╗ ██╗   ██╗███████╗    ██████╗ ███████╗██████╗ ██╗      ██████╗  █████╗ ████████╗
+██╔══██╗██╔══██╗██╔══██╗██║   ██║██╔════╝    ██╔══██╗██╔════╝██╔══██╗██║     ██╔═══██╗██╔══██╗╚══██╔══╝
+██████╔╝██████╔╝███████║██║   ██║█████╗      ██║  ██║█████╗  ██████╔╝██║     ██║   ██║███████║   ██║   
+██╔══██╗██╔══██╗██╔══██║╚██╗ ██╔╝██╔══╝      ██║  ██║██╔══╝  ██╔══██╗██║     ██║   ██║██╔══██║   ██║   
+██████╔╝██║  ██║██║  ██║ ╚████╔╝ ███████╗    ██████╔╝███████╗██████╔╝███████╗╚██████╔╝██║  ██║   ██║   
+╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝  ╚═══╝  ╚══════╝    ╚═════╝ ╚══════╝╚═════╝ ╚══════╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝   
 "
+    echo "A script to debloat Brave brower and apply optimizations..."
+    echo "*Note I am working on a new version of this script to cover smoothbrain Win and Mac users."
+    echo
     echo "=== Brave Browser Optimization Menu ==="
     echo "1. Apply Default Optimizations (Recommended)"
     echo "   Enables core performance features and removes unnecessary bloat"
@@ -306,19 +353,23 @@ show_menu() {
     echo "6. Disable Background Running"
     echo "   WARNING: May cause instability"
     echo
-    echo "7. Toggle Memory Saver"
-    echo "   Automatically frees memory from inactive tabs"
+        echo "7. Toggle Memory Saver"
+    echo "   Reduces memory usage by suspending inactive tabs"
     echo
     echo "8. UI Improvements"
-    echo "   Show full URLs, wide address bar, always show bookmarks"
+    echo "   Shows full URLs, enables wide address bar, and bookmarks bar"
     echo
     echo "9. Dashboard Customization"
-    echo "   Disable Brave Stats, Search Widget, Enable Clock"
+    echo "   Removes widgets and customizes the new tab page"
     echo
     echo "10. Remove Brave Rewards/VPN/Wallet"
-    echo "    Removes cryptocurrency, VPN, and wallet promotional elements"
+    echo "    Disables cryptocurrency and rewards features"
     echo
-    echo "11. Exit"
+    echo "11. Toggle Experimental Ad Blocking (ON/OFF)"
+    echo "    Enhanced ad blocking - Current status will be shown"
+    echo
+    echo "12. Exit"
+    echo
 }
 
 # Main function
@@ -327,7 +378,7 @@ main() {
     
     while true; do
         show_menu
-        read -p "Enter your choice [1-11]: " choice
+        read -p "Enter your choice [1-12]: " choice
         
         case ${choice} in
             1) 
@@ -406,7 +457,20 @@ EOF
                 ;;
             9)
                 log_message "Customizing dashboard..."
-                modify_dashboard_preferences
+                if [[ -f "${BRAVE_PREFS}" ]]; then
+                    jq '.brave = (.brave // {}) | 
+                        .brave.stats = (.brave.stats // {}) |
+                        .brave.stats.enabled = false |
+                        .brave.today = (.brave.today // {}) |
+                        .brave.today.should_show_brave_today_widget = false |
+                        .brave.new_tab_page = (.brave.new_tab_page // {}) |
+                        .brave.new_tab_page.show_clock = true |
+                        .brave.new_tab_page.show_search_widget = false' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
+                    mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
+                    log_message "Dashboard preferences modified successfully"
+                else
+                    log_error "Preferences file not found"
+                fi
                 sleep 2.5
                 ;;
             10)
@@ -423,6 +487,37 @@ EOF
                 sleep 2.5
                 ;;
             11)
+                log_message "Checking current experimental ad blocking status..."
+                if [[ -f "${BRAVE_PREFS}" ]]; then
+                    if jq -e '.brave.shields.experimental_filters_enabled' "${BRAVE_PREFS}" >/dev/null 2>&1; then
+                        log_message "Experimental Ad Blocking is currently ENABLED"
+                        read -p "Would you like to disable it? (y/n): " disable_choice
+                        if [[ "${disable_choice}" =~ ^[Yy]$ ]]; then
+                            jq '.brave = (.brave // {}) | 
+                                .brave.shields = (.brave.shields // {}) |
+                                .brave.shields.experimental_filters_enabled = false' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
+                            mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
+                            log_message "Experimental Ad Blocking has been DISABLED"
+                        fi
+                    else
+                        log_message "Experimental Ad Blocking is currently DISABLED"
+                        read -p "Would you like to enable it? (y/n): " enable_choice
+                        if [[ "${enable_choice}" =~ ^[Yy]$ ]]; then
+                            jq '.brave = (.brave // {}) | 
+                                .brave.shields = (.brave.shields // {}) |
+                                .brave.shields.experimental_filters_enabled = true |
+                                .brave.shields.advanced_view_enabled = true' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
+                            mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
+                            log_message "Experimental Ad Blocking has been ENABLED"
+                        fi
+                    fi
+                    log_message "Please restart Brave browser for changes to take effect"
+                else
+                    log_error "Preferences file not found"
+                fi
+                sleep 2.5
+                ;;
+            12)
                 log_message "Exiting...
      ⢀⣠⡴⠶⠟⠛⠛⠛⠶⠶⠤⣤⣀⠀⠀⠀⠀⣀⡤⠶⠶⠶⠶⢤⣤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⢠⣶⠟⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠻⣦⣤⠞⠋⠀⠀⠀⠀⠀⠀⠈⠙⠻⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
