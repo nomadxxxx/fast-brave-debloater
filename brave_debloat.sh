@@ -86,7 +86,7 @@ create_desktop_entry() {
     log_message "Creating desktop entry for Brave Debloat..."
     
     # Performance flags
-    PERFORMANCE_FLAGS="--enable-gpu-rasterization --enable-zero-copy --ignore-gpu-blocklist --enable-vulkan --enable-parallel-downloading"
+    PERFORMANCE_FLAGS="--enable-gpu-rasterization --enable-zero-copy --ignore-gpu-blocklist --enable-vulkan --enable-parallel-downloading --enable-features=BraveAdblockExperimental"
 
     # Create desktop entry
     cat > "/usr/share/applications/brave-debloat.desktop" << EOF
