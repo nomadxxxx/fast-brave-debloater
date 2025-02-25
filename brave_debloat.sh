@@ -298,49 +298,43 @@ EOF
     done
 }
 
-# Function to apply default optimizations
-apply_default_optimizations() {
-    log_message "Applying default optimizations..."
-    
-    apply_brave_policies
-    create_desktop_entry
-    modify_dashboard_preferences
-    
-    # Enable experimental ad blocking in the default optimizations
-    log_message "Enabling Experimental Ad Blocking..."
-    # Create policy file
-    cat > "${POLICY_DIR}/adblock.json" << EOF
+# Enable advanced ad blocking in the default optimizations
+log_message "Enabling Advanced Ad Blocking..."
+# Create policy file
+cat > "${POLICY_DIR}/adblock.json" << EOF
 {
     "ShieldsAdvancedView": true,
     "BraveExperimentalAdblockEnabled": true
 }
 EOF
-    chmod 644 "${POLICY_DIR}/adblock.json"
-    
-    # Also modify preferences
-    if [[ -f "${BRAVE_PREFS}" ]]; then
-        jq '.brave = (.brave // {}) | 
-            .brave.shields = (.brave.shields // {}) |
-            .brave.shields.advanced_view_enabled = true |
-            .brave.shields.experimental_filters_enabled = true' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
-        mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
+chmod 644 "${POLICY_DIR}/adblock.json"
+
+# Also modify preferences
+if [[ -f "${BRAVE_PREFS}" ]]; then
+    jq '.brave = (.brave // {}) | 
+        .brave.shields = (.brave.shields // {}) |
+        .brave.shields.advanced_view_enabled = true |
+        .brave.shields.experimental_filters_enabled = true |
+        .brave.ad_block = (.brave.ad_block // {}) |
+        .brave.ad_block.regional_filters = (.brave.ad_block.regional_filters // {}) |
+        .brave.ad_block.regional_filters["brave-experimental"] = true' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
+    mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
+fi
+
+# Enable the flag in Local State
+LOCAL_STATE="${PREFERENCES_DIR%/*}/Local State"
+if [[ -f "${LOCAL_STATE}" ]]; then
+    # Check if the file contains the browser.enabled_labs_experiments key
+    if jq -e '.browser.enabled_labs_experiments' "${LOCAL_STATE}" >/dev/null 2>&1; then
+        # Add the flag if it doesn't exist
+        jq '.browser.enabled_labs_experiments += ["brave-adblock-experimental-list-default"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
+    else
+        # Create the key if it doesn't exist
+        jq '.browser = (.browser // {}) | .browser.enabled_labs_experiments = ["brave-adblock-experimental-list-default"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
     fi
-    
-    # Enable the flag in Local State
-    LOCAL_STATE="${PREFERENCES_DIR%/*}/Local State"
-    if [[ -f "${LOCAL_STATE}" ]]; then
-        # Check if the file contains the browser.enabled_labs_experiments key
-        if jq -e '.browser.enabled_labs_experiments' "${LOCAL_STATE}" >/dev/null 2>&1; then
-            # Add the flag if it doesn't exist
-            jq '.browser.enabled_labs_experiments += ["brave-adblock-experimental-list-default@1"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
-        else
-            # Create the key if it doesn't exist
-            jq '.browser = (.browser // {}) | .browser.enabled_labs_experiments = ["brave-adblock-experimental-list-default@1"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
-        fi
-        mv "${LOCAL_STATE}.tmp" "${LOCAL_STATE}"
-        log_message "Enabled experimental adblock flag in browser flags"
-    fi
-    
+    mv "${LOCAL_STATE}.tmp" "${LOCAL_STATE}"
+    log_message "Enabled advanced ad blocking flag in browser flags"
+fi 
     log_message "Default optimizations applied successfully"
     log_message "Please restart Brave browser for changes to take effect"
 }
@@ -511,10 +505,10 @@ EOF
                 sleep 2.5
                 ;;
             11)
-    log_message "Checking current experimental ad blocking status..."
+    log_message "Checking current advanced ad blocking status..."
     if [[ -f "${BRAVE_PREFS}" ]]; then
-        if jq -e '.brave.shields.experimental_filters_enabled // false' "${BRAVE_PREFS}" >/dev/null 2>&1; then
-            log_message "Experimental Ad Blocking is currently ENABLED"
+        if jq -e '.brave.ad_block.regional_filters["brave-experimental"] // false' "${BRAVE_PREFS}" >/dev/null 2>&1; then
+            log_message "Advanced Ad Blocking is currently ENABLED"
             read -p "Would you like to disable it? (y/n): " disable_choice
             if [[ "${disable_choice}" =~ ^[Yy]$ ]]; then
                 # Remove policy file
@@ -532,20 +526,20 @@ EOF
                 # Disable the flag in Local State
                 LOCAL_STATE="${PREFERENCES_DIR%/*}/Local State"
                 if [[ -f "${LOCAL_STATE}" ]]; then
-                    jq 'del(.browser.enabled_labs_experiments[] | select(. == "brave-adblock-experimental-list-default@1"))' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
+                    jq 'del(.browser.enabled_labs_experiments[] | select(. == "brave-adblock-experimental-list-default"))' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
                     mv "${LOCAL_STATE}.tmp" "${LOCAL_STATE}"
                 fi
                 
                 # Remove flag from desktop entry
                 if grep -q -- "--enable-features=brave-adblock-experimental-list-default" "/usr/share/applications/brave-debloat.desktop"; then
                     sed -i 's/--enable-features=brave-adblock-experimental-list-default//' "/usr/share/applications/brave-debloat.desktop"
-                    log_message "Removed experimental adblock flag from desktop entry"
+                    log_message "Removed advanced ad blocking flag from desktop entry"
                 fi
                 
-                log_message "Experimental Ad Blocking has been DISABLED"
+                log_message "Advanced Ad Blocking has been DISABLED"
             fi
         else
-            log_message "Experimental Ad Blocking is currently DISABLED"
+            log_message "Advanced Ad Blocking is currently DISABLED"
             read -p "Would you like to enable it? (y/n): " enable_choice
             if [[ "${enable_choice}" =~ ^[Yy]$ ]]; then
                 # Create policy file
@@ -573,24 +567,24 @@ EOF
                     # Check if the file contains the browser.enabled_labs_experiments key
                     if jq -e '.browser.enabled_labs_experiments' "${LOCAL_STATE}" >/dev/null 2>&1; then
                         # Add the flag if it doesn't exist
-                        jq '.browser.enabled_labs_experiments += ["brave-adblock-experimental-list-default@1"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
+                        jq '.browser.enabled_labs_experiments += ["brave-adblock-experimental-list-default"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
                     else
                         # Create the key if it doesn't exist
-                        jq '.browser = (.browser // {}) | .browser.enabled_labs_experiments = ["brave-adblock-experimental-list-default@1"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
+                        jq '.browser = (.browser // {}) | .browser.enabled_labs_experiments = ["brave-adblock-experimental-list-default"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
                     fi
                     mv "${LOCAL_STATE}.tmp" "${LOCAL_STATE}"
-                    log_message "Enabled experimental adblock flag in browser flags"
+                    log_message "Enabled advanced ad blocking flag in browser flags"
                 fi
                 
                 # Add flag to desktop entry
                 if grep -q "Exec=brave" "/usr/share/applications/brave-debloat.desktop"; then
                     if ! grep -q -- "--enable-features=brave-adblock-experimental-list-default" "/usr/share/applications/brave-debloat.desktop"; then
                         sed -i 's/Exec=brave/Exec=brave --enable-features=brave-adblock-experimental-list-default/' "/usr/share/applications/brave-debloat.desktop"
-                        log_message "Added experimental adblock flag to desktop entry"
+                        log_message "Added advanced ad blocking flag to desktop entry"
                     fi
                 fi
                 
-                log_message "Experimental Ad Blocking has been ENABLED"
+                log_message "Advanced Ad Blocking has been ENABLED"
             fi
         fi
         log_message "Please COMPLETELY QUIT Brave browser and restart for changes to take effect"
