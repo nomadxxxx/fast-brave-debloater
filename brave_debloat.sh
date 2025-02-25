@@ -524,15 +524,15 @@ EOF
                 jq '.brave = (.brave // {}) | 
                     .brave.shields = (.brave.shields // {}) |
                     .brave.shields.experimental_filters_enabled = false |
-                    .brave.adblock = (.brave.adblock // {}) |
-                    .brave.adblock.regional_filters = (.brave.adblock.regional_filters // {}) |
-                    .brave.adblock.regional_filters["brave-experimental"] = false' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
+                    .brave.ad_block = (.brave.ad_block // {}) |
+                    .brave.ad_block.regional_filters = (.brave.ad_block.regional_filters // {}) |
+                    .brave.ad_block.regional_filters["brave-experimental"] = false' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
                 mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
                 
                 # Disable the flag in Local State
                 LOCAL_STATE="${PREFERENCES_DIR%/*}/Local State"
                 if [[ -f "${LOCAL_STATE}" ]]; then
-                    jq 'del(.browser.enabled_labs_experiments[] | select(. == "brave-adblock-experimental-list-default"))' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
+                    jq 'del(.browser.enabled_labs_experiments[] | select(. == "brave-adblock-experimental-list-default@1"))' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
                     mv "${LOCAL_STATE}.tmp" "${LOCAL_STATE}"
                 fi
                 
@@ -562,9 +562,9 @@ EOF
                     .brave.shields = (.brave.shields // {}) |
                     .brave.shields.experimental_filters_enabled = true |
                     .brave.shields.advanced_view_enabled = true |
-                    .brave.adblock = (.brave.adblock // {}) |
-                    .brave.adblock.regional_filters = (.brave.adblock.regional_filters // {}) |
-                    .brave.adblock.regional_filters["brave-experimental"] = true' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
+                    .brave.ad_block = (.brave.ad_block // {}) |
+                    .brave.ad_block.regional_filters = (.brave.ad_block.regional_filters // {}) |
+                    .brave.ad_block.regional_filters["brave-experimental"] = true' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
                 mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
                 
                 # Enable the flag in Local State
@@ -573,10 +573,10 @@ EOF
                     # Check if the file contains the browser.enabled_labs_experiments key
                     if jq -e '.browser.enabled_labs_experiments' "${LOCAL_STATE}" >/dev/null 2>&1; then
                         # Add the flag if it doesn't exist
-                        jq '.browser.enabled_labs_experiments += ["brave-adblock-experimental-list-default"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
+                        jq '.browser.enabled_labs_experiments += ["brave-adblock-experimental-list-default@1"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
                     else
                         # Create the key if it doesn't exist
-                        jq '.browser = (.browser // {}) | .browser.enabled_labs_experiments = ["brave-adblock-experimental-list-default"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
+                        jq '.browser = (.browser // {}) | .browser.enabled_labs_experiments = ["brave-adblock-experimental-list-default@1"]' "${LOCAL_STATE}" > "${LOCAL_STATE}.tmp"
                     fi
                     mv "${LOCAL_STATE}.tmp" "${LOCAL_STATE}"
                     log_message "Enabled experimental adblock flag in browser flags"
