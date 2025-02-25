@@ -65,6 +65,7 @@ locate_brave_files() {
 
     # Create necessary directories
     mkdir -p "${POLICY_DIR}"
+    mkdir -p "/usr/share/brave"
     mkdir -p "${PREFERENCES_DIR}"
     
     # Copy icon if it exists in current directory
@@ -308,6 +309,16 @@ apply_default_optimizations() {
     
     # Enable experimental ad blocking in the default optimizations
     log_message "Enabling Experimental Ad Blocking..."
+    # Create policy file
+    cat > "${POLICY_DIR}/adblock.json" << EOF
+{
+    "ShieldsAdvancedView": true,
+    "BraveExperimentalAdblockEnabled": true
+}
+EOF
+    chmod 644 "${POLICY_DIR}/adblock.json"
+    
+    # Also modify preferences
     if [[ -f "${BRAVE_PREFS}" ]]; then
         jq '.brave = (.brave // {}) | 
             .brave.shields = (.brave.shields // {}) |
@@ -487,36 +498,48 @@ EOF
                 sleep 2.5
                 ;;
             11)
-                log_message "Checking current experimental ad blocking status..."
-                if [[ -f "${BRAVE_PREFS}" ]]; then
-                    if jq -e '.brave.shields.experimental_filters_enabled' "${BRAVE_PREFS}" >/dev/null 2>&1; then
-                        log_message "Experimental Ad Blocking is currently ENABLED"
-                        read -p "Would you like to disable it? (y/n): " disable_choice
-                        if [[ "${disable_choice}" =~ ^[Yy]$ ]]; then
-                            jq '.brave = (.brave // {}) | 
-                                .brave.shields = (.brave.shields // {}) |
-                                .brave.shields.experimental_filters_enabled = false' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
-                            mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
-                            log_message "Experimental Ad Blocking has been DISABLED"
-                        fi
-                    else
-                        log_message "Experimental Ad Blocking is currently DISABLED"
-                        read -p "Would you like to enable it? (y/n): " enable_choice
-                        if [[ "${enable_choice}" =~ ^[Yy]$ ]]; then
-                            jq '.brave = (.brave // {}) | 
-                                .brave.shields = (.brave.shields // {}) |
-                                .brave.shields.experimental_filters_enabled = true |
-                                .brave.shields.advanced_view_enabled = true' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
-                            mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
-                            log_message "Experimental Ad Blocking has been ENABLED"
-                        fi
-                    fi
-                    log_message "Please restart Brave browser for changes to take effect"
-                else
-                    log_error "Preferences file not found"
-                fi
-                sleep 2.5
-                ;;
+    log_message "Checking current experimental ad blocking status..."
+    if [[ -f "${BRAVE_PREFS}" ]]; then
+        if jq -e '.brave.shields.experimental_filters_enabled // false' "${BRAVE_PREFS}" >/dev/null 2>&1; then
+            log_message "Experimental Ad Blocking is currently ENABLED"
+            read -p "Would you like to disable it? (y/n): " disable_choice
+            if [[ "${disable_choice}" =~ ^[Yy]$ ]]; then
+                # Remove policy file
+                rm -f "${POLICY_DIR}/adblock.json"
+                # Update preferences
+                jq '.brave = (.brave // {}) | 
+                    .brave.shields = (.brave.shields // {}) |
+                    .brave.shields.experimental_filters_enabled = false' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
+                mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
+                log_message "Experimental Ad Blocking has been DISABLED"
+            fi
+        else
+            log_message "Experimental Ad Blocking is currently DISABLED"
+            read -p "Would you like to enable it? (y/n): " enable_choice
+            if [[ "${enable_choice}" =~ ^[Yy]$ ]]; then
+                # Create policy file
+                cat > "${POLICY_DIR}/adblock.json" << EOF
+{
+    "ShieldsAdvancedView": true,
+    "experimental_filters_enabled": true
+}
+EOF
+                chmod 644 "${POLICY_DIR}/adblock.json"
+                # Update preferences
+                jq '.brave = (.brave // {}) | 
+                    .brave.shields = (.brave.shields // {}) |
+                    .brave.shields.experimental_filters_enabled = true |
+                    .brave.shields.advanced_view_enabled = true' "${BRAVE_PREFS}" > "${BRAVE_PREFS}.tmp"
+                mv "${BRAVE_PREFS}.tmp" "${BRAVE_PREFS}"
+                log_message "Experimental Ad Blocking has been ENABLED"
+            fi
+        fi
+        log_message "Please restart Brave browser for changes to take effect"
+    else
+        log_error "Preferences file not found"
+    fi
+    sleep 2.5
+    ;;
             12)
                 log_message "Exiting...
      ⢀⣠⡴⠶⠟⠛⠛⠛⠶⠶⠤⣤⣀⠀⠀⠀⠀⣀⡤⠶⠶⠶⠶⢤⣤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
