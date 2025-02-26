@@ -1,6 +1,6 @@
 ![alt text](https://github.com/nomadxxxx/fast-brave-debloater/blob/main/logo.png) 
 
-A powerful optimization script that strips Brave Browser of bloat and enhances performance. Say goodbye to Brave crypto, VPN, Ad bullshit and unnecessary features!
+A powerful optimization script that strips Brave Browser of bloat and enhances performance. Say goodbye to Brave crypto, VPN, Ad bullshit and unnecessary features! The script also automates fresh Brave installs letting you pick from Stable, Beta and Nightly variants.
 
 # Removes Brave Bloat
 
@@ -90,7 +90,8 @@ Select specific customizations:
 - Select from recommended extensions (ublock, protonpass, darkreader etc) to install
 
 ### To do
-- [X] Implement experimental ad-blocking feature 
+- [X] Implement experimental ad-blocking feature
+- [X] Implement Brave install automation
 - [ ] Finish and test powershell version for windows
 - [ ] Make a script compatible with macOS
 
