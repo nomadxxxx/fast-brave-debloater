@@ -1,0 +1,119 @@
+{
+  "categories": {
+    "Adblocking": [
+      {
+        "name": "uBlock Origin",
+        "id": "cjpalhdlnbpafiamejdnhcphjbkeiagm",
+        "description": "Block ads and trackers (recommended)",
+        "recommended": true
+      },
+      {
+        "name": "Privacy Badger",
+        "id": "pkehgijcmpdhfbdbbnkijodmdjhbjlgp",
+        "description": "Learns to block trackers",
+        "recommended": false
+      },
+      {
+        "name": "Adblock Plus",
+        "id": "cfhdojbkjhnklbpkdaibdccddilifddb",
+        "description": "Block ads and popups",
+        "recommended": false
+      },
+      {
+        "name": "Decentraleyes",
+        "id": "ldpochfccmkkmhdbclfhpagapcfdljkj",
+        "description": "Local CDN emulation",
+        "recommended": false
+      }
+    ],
+    "Password Management": [
+      {
+        "name": "Bitwarden",
+        "id": "nngceckbapebfimnlniiiahkandclblb",
+        "description": "Password manager (recommended if self-hosted)",
+        "recommended": true
+      },
+      {
+        "name": "ProtonPass",
+        "id": "dkfacdkemopkiollbhjlpapcbnpnemgc",
+        "description": "Password manager (recommended if not self-hosted)",
+        "recommended": true
+      },
+      {
+        "name": "KeePassHelper",
+        "id": "jfpmbokkdeapjommajdfmmheiiakdlgo",
+        "description": "Open source password manager",
+        "recommended": false
+      },
+      {
+        "name": "Passbolt",
+        "id": "didegimhafipceonhjepacocaffmoppf",
+        "description": "Open source password manager",
+        "recommended": false
+      },
+      {
+        "name": "LastPass",
+        "id": "hdokiejnpimakedhajhdlcegeplioahd",
+        "description": "Popular password manager",
+        "recommended": false
+      }
+    ],
+    "Utilities": [
+      {
+        "name": "Dark Reader",
+        "id": "eimadpbcbfnmbkopoojfekhnkhdbieeh",
+        "description": "Dark mode for websites (recommended)",
+        "recommended": true
+      },
+      {
+        "name": "ClearURLs",
+        "id": "lckanjgmijmafbedllaakclkaicjfmnk",
+        "description": "Remove tracking elements from URLs",
+        "recommended": true
+      },
+      {
+        "name": "SponsorBlock",
+        "id": "mnjggcdmjocbbbhaepdhchncahnbgone",
+        "description": "Skip sponsored segments in videos",
+        "recommended": true
+      },
+      {
+        "name": "Return YouTube Dislike",
+        "id": "gebbhagfogifgggkldgodflihgfeippi",
+        "description": "Restore dislike counts on YouTube",
+        "recommended": true
+      },
+      {
+        "name": "Enhancer for YouTube",
+        "id": "ponfpcnoihfmfllpaingbgckeeldkhle",
+        "description": "Enhance YouTube experience",
+        "recommended": false
+      },
+      {
+        "name": "Tab Manager by Workona",
+        "id": "ailcmbgekjpnablpdkmaaccecekgdhlh",
+        "description": "Organize tabs into workspaces",
+        "recommended": false
+      },
+      {
+        "name": "TABLERONE Tab",
+        "id": "andpjllgockcfpcpnhgnnhepgaeakddk",
+        "description": "Visual tab manager",
+        "recommended": false
+      },
+      {
+        "name": "Momentum",
+        "id": "laookkfknpbbblfpciffpaejjkokdgca",
+        "description": "Replace new tab page with productivity dashboard",
+        "recommended": false
+      }
+    ]
+  },
+  "recommended_ids": [
+    "cjpalhdlnbpafiamejdnhcphjbkeiagm",
+    "eimadpbcbfnmbkopoojfekhnkhdbieeh",
+    "mnjggcdmjocbbbhaepdhchncahnbgone",
+    "gebbhagfogifgggkldgodflihgfeippi",
+    "lckanjgmijmafbedllaakclkaicjfmnk"
+  ]
+}
