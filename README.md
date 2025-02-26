@@ -1,20 +1,20 @@
 ![alt text](https://github.com/nomadxxxx/fast-brave-debloater/blob/main/logo.png) 
 
-A powerful optimization script that strips Brave Browser of bloat and enhances performance. Say goodbye to crypto popups, VPN promotions, and unnecessary features!
+A powerful optimization script that strips Brave Browser of bloat and enhances performance. Say goodbye to Brave crypto, VPN, Ad bullshit and unnecessary features! 
 
-# Removes Brave Bloat
+The script also automates fresh Brave installs letting you pick from Stable, Beta and Nightly variants and automatically run defoalt debloat, search engine selection and extension install.
 
-❌ No more crypto wallet popups
+# Removes Brave Bloat and improves performance
 
-❌ No more VPN promotions
+❌ No more crypto wallet
+
+❌ No more Brave VPN promotions
 
 ❌ No more Brave Rewards notifications
 
-❌ No more AI Chat suggestions
+❌ No more LeoAI Chat suggestions
 
-❌ No more unnecessary background processes
-
-## Improves Performance
+❌ No more unnecessary background processes (e.g. Brave Sync)
 
 ✅ Enables GPU acceleration for smoother browsing
 
@@ -26,7 +26,7 @@ A powerful optimization script that strips Brave Browser of bloat and enhances p
 
 ✅ Optimizes memory usage
 
-## Enhances Privacy
+## Enhances Privacy and Brave Autoinstall Options
 
 ✅ Disables telemetry
 
@@ -34,10 +34,9 @@ A powerful optimization script that strips Brave Browser of bloat and enhances p
 
 ✅ Stops background data collection
 
-✅ Disable Brave Sync (optional but recommended)
+✅ Allows you to automate brave intallation (installation, search engine prefs and extension installation)
 
-### Customizes for security
-
+### Search Engine Options
 Script allows you to choose your preferred privacy-respecting search engine:
 
 - DuckDuckGo (privacy focused but collects data)
@@ -50,6 +49,9 @@ Script allows you to choose your preferred privacy-respecting search engine:
 ...or worse options
 - Google (not recommended)
 - Bing (not recommended)
+  
+### Search Engine Options
+Script allows you to choose your preferred privacy-respecting search engine:
 
 ### 🔧 Installation
 ```
@@ -66,7 +68,12 @@ Apply Default Optimizations (recommended)
 - enables hardware rendering
 - provides full URLs, wide address bar
 - improves memory usage
-  
+
+Install Brave and Apply Customisation
+- Installs Brave variant you select, applies default optimizations (see above)
+- Makes you select a new Search Engine
+- Provides options for extension installation
+
 Select specific customizations:
 - Change Search Engine
   --  DuckDuckGo (Recommended)
@@ -86,11 +93,24 @@ Select specific customizations:
 - Disable Brave Rewards/VPN/Wallet
 - Toggle Memory Saver
   --Automatically frees memory from inactive tabs
+- Enable experimental ad-blocking
+- Select from recommended extensions (ublock, protonpass, darkreader etc) to install
 
 ### To do
-- [ ] Implement experimental ad-blocking feature 
+- [X] Implement experimental ad-blocking feature
+- [X] Implement Brave install automation
 - [ ] Finish and test powershell version for windows
 - [ ] Make a script compatible with macOS
+
+### How the Script Works
+The script uses several mechanisms to debloat and optimize Brave:
+1. Policy Files: Creates and modifies JSON policy files in Brave's managed policies directory to control browser behavior at a system level (basically creates an enterprise policy to make changes persistent across Brave updates etc).
+2. Preferences Modification: Directly edits the Brave preferences file using jq to disable unwanted features and customize the browser experience.
+3.Local State Modification: Updates the Local State file to enable experimental features like advanced ad blocking.
+4. Desktop Entry Creation: Creates a custom desktop entry (brave-debloat.desktop) that launches Brave with optimized parameters/flags.
+5. Extension Installation: Provides a streamlined interface for installing recommended privacy and productivity extensions (note that this will not auto-install because of Brave security policies but it comes close to auto-installation).
+6. Policy Enforcement: Uses enterprise policies to permanently disable unwanted features like Brave Rewards, VPN, Wallet, and AI Chat.
+
 
 ⚠️ Important Notes
 - Requires root privileges. 
