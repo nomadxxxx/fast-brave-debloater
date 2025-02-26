@@ -45,27 +45,6 @@ download_file() {
   return 0
 }
 
-# Brave process management functions
-kill_brave() {
-  log_message "Stopping Brave browser..."
-  pkill -x "brave" >/dev/null 2>&1
-  pkill -x "brave-browser" >/dev/null 2>&1
-  pkill -f "flatpak run com.brave.Browser" >/dev/null 2>&1
-  sleep 2
-}
-
-start_brave_with_urls() {
-  local urls=("$@")
-  if [[ "$IS_FLATPAK" == "true" ]]; then
-    flatpak run com.brave.Browser "${urls[@]}" &
-  elif [[ -n "$BRAVE_EXEC" ]]; then
-    "$BRAVE_EXEC" "${urls[@]}" &
-  else
-    log_error "Brave executable not found"
-    return 1
-  fi
-}
-
 # Function to locate Brave files
 locate_brave_files() {
   log_message "Locating Brave browser..."
@@ -154,6 +133,22 @@ install_brave_variant() {
   fi
 }
 
+# Function to apply a policy from GitHub
+apply_policy() {
+  local policy_name="$1"
+  local policy_file="${POLICY_DIR}/${policy_name}.json"
+  
+  log_message "Applying ${policy_name} policy..."
+  if download_file "${GITHUB_BASE}/policies/${policy_name}.json" "$policy_file"; then
+    chmod 644 "$policy_file"
+    log_message "${policy_name} policy applied successfully"
+    return 0
+  else
+    log_error "Failed to apply ${policy_name} policy"
+    return 1
+  fi
+}
+
 # Function to create desktop entry
 create_desktop_entry() {
   log_message "Creating desktop entry for Brave Debloat..."
@@ -189,22 +184,6 @@ EOF
   chmod 644 "$desktop_file"
   log_message "Desktop entry created successfully"
   return 0
-}
-
-# Function to apply a policy from GitHub
-apply_policy() {
-  local policy_name="$1"
-  local policy_file="${POLICY_DIR}/${policy_name}.json"
-  
-  log_message "Applying ${policy_name} policy..."
-  if download_file "${GITHUB_BASE}/policies/${policy_name}.json" "$policy_file"; then
-    chmod 644 "$policy_file"
-    log_message "${policy_name} policy applied successfully"
-    return 0
-  else
-    log_error "Failed to apply ${policy_name} policy"
-    return 1
-  fi
 }
 
 # Function to modify dashboard preferences
@@ -247,7 +226,7 @@ apply_default_optimizations() {
   apply_policy "adblock"
   apply_policy "privacy"
   apply_policy "ui"
-  apply_policy "features"  # Added features.json
+  apply_policy "features"
   create_desktop_entry
   modify_dashboard_preferences
   
@@ -270,45 +249,73 @@ apply_default_optimizations() {
   log_message "Please restart Brave browser for changes to take effect"
 }
 
-# Function to install Brave and optimize
-install_brave_and_optimize() {
-  log_message "Starting Brave installation and optimization process..."
+# Function to install dashboard customizer extension
+install_dashboard_customizer() {
+  log_message "Installing Brave Dashboard Customizer extension..."
   
-  # Step 1: Select Brave variant
-  log_message "Select Brave variant to install..."
-  echo "1. Brave Stable"
-  echo "2. Brave Beta"
-  echo "3. Brave Nightly"
-  read -p "Enter your choice [1-3]: " variant
+  # Create directory if it doesn't exist
+  mkdir -p "/usr/share/brave"
   
-  case $variant in
-    1) variant_name="stable" ;;
-    2) variant_name="beta" ;;
-    3) variant_name="nightly" ;;
-    *) log_error "Invalid selection. Aborting."; return 1 ;;
-  esac
+  # Download the extension
+  local crx_url="${GITHUB_BASE}/brave-dashboard-customizer/brave-dashboard-customizer.crx"
+  local crx_path="/usr/share/brave/brave-dashboard-customizer.crx"
   
-  # Step 2: Install selected Brave variant
-  install_brave_variant "$variant_name"
-  if [ $? -ne 0 ]; then
-    log_error "Failed to install Brave browser. Aborting."
+  if download_file "$crx_url" "$crx_path"; then
+    chmod 644 "$crx_path"
+    log_message "Dashboard Customizer extension downloaded successfully"
+    
+    # Update the desktop entry to load the extension
+    local desktop_file="/usr/share/applications/brave-debloat.desktop"
+    if [[ -f "$desktop_file" ]]; then
+      # Check if the extension is already in the Exec line
+      if ! grep -q -- "--load-extension=${crx_path}" "$desktop_file"; then
+        sed -i "s|^Exec=brave|Exec=brave --load-extension=${crx_path}|" "$desktop_file"
+        log_message "Desktop entry updated to load Dashboard Customizer"
+      fi
+    else
+      # Create a new desktop entry if it doesn't exist
+      create_desktop_entry
+      sed -i "s|^Exec=brave|Exec=brave --load-extension=${crx_path}|" "$desktop_file"
+      log_message "Desktop entry created with Dashboard Customizer"
+    fi
+    
+    return 0
+  else
+    log_error "Failed to download Dashboard Customizer extension"
     return 1
   fi
+}
+
+# Function to revert all changes
+revert_all_changes() {
+  log_message "Reverting all changes made by the script..."
   
-  # Step 3: Apply default optimizations
-  log_message "Applying default optimizations and debloating Brave..."
-  apply_default_optimizations
+  # Remove policy files
+  if [[ -d "${POLICY_DIR}" ]]; then
+    rm -f "${POLICY_DIR}"/*.json
+    log_message "Removed policy files"
+  fi
   
-  # Step 4: Select search engine
-  log_message "Select default search engine..."
-  set_search_engine
+  # Remove desktop entry
+  if [[ -f "/usr/share/applications/brave-debloat.desktop" ]]; then
+    rm -f "/usr/share/applications/brave-debloat.desktop"
+    log_message "Removed desktop entry"
+  fi
   
-  # Step 5: Present extension selection UI
-  log_message "Select extensions to install..."
-  install_recommended_extensions
+  # Remove downloaded extensions
+  if [[ -f "/usr/share/brave/brave-dashboard-customizer.crx" ]]; then
+    rm -f "/usr/share/brave/brave-dashboard-customizer.crx"
+    log_message "Removed Dashboard Customizer extension"
+  fi
   
-  log_message "Brave installation and optimization completed successfully."
-  log_message "Please restart Brave browser for all changes to take effect."
+  # Remove icon
+  if [[ -f "/usr/share/icons/brave_debloat.png" ]]; then
+    rm -f "/usr/share/icons/brave_debloat.png"
+    log_message "Removed icon"
+  fi
+  
+  log_message "All changes have been reverted. Please restart Brave browser."
+  log_message "Note: Any extensions you installed will remain in your browser."
 }
 # Function to set search engine
 set_search_engine() {
@@ -440,7 +447,139 @@ EOF
     chmod 644 "${policy_file}"
   done
 }
+# Function to install recommended extensions
+install_recommended_extensions() {
+  log_message "Installing recommended Brave extensions..."
+  
+  # Download extension data
+  local temp_file=$(mktemp)
+  if ! download_file "${GITHUB_BASE}/policies/consolidated_extensions.json" "$temp_file"; then
+    log_error "Failed to download extension data"
+    rm "$temp_file"
+    return 1
+  fi
 
+  # Simplified approach - just list all extensions with numbers
+  echo -e "\n=== Available Extensions ==="
+  local i=1
+  declare -A extension_map
+  
+  # Get all extensions regardless of category
+  while read -r ext_line; do
+    local id=$(echo "$ext_line" | cut -d'|' -f1)
+    local name=$(echo "$ext_line" | cut -d'|' -f2)
+    local description=$(echo "$ext_line" | cut -d'|' -f3)
+    local recommended=$(echo "$ext_line" | cut -d'|' -f4)
+    
+    # Mark recommended extensions with an asterisk
+    local mark=""
+    if [[ "$recommended" == "true" ]]; then
+      mark="*"
+    fi
+    
+    printf "%2d. %-25s - %s %s\n" "$i" "$name" "$description" "$mark"
+    extension_map["$i"]="$id|$name"
+    ((i++))
+  done < <(jq -r '.categories | to_entries[] | .value[] | [.id, .name, .description, (.recommended|tostring)] | join("|")' "$temp_file")
+  
+  echo -e "\n* = Recommended extension"
+  
+  # Get user selection
+  echo -e "\nEnter space-separated numbers (1-$((i-1))) to select extensions"
+  echo -n "Press Enter to install recommended extensions only: "
+  read -a selections
+  
+  # Process selections
+  local selected_exts=()
+  if [ ${#selections[@]} -eq 0 ]; then
+    # Get recommended extensions
+    while read -r id; do
+      # Find name for this ID
+      local name=$(jq -r ".categories[][] | select(.id == \"$id\") | .name" "$temp_file")
+      selected_exts+=("$id|$name")
+    done < <(jq -r '.recommended_ids[]' "$temp_file")
+  else
+    # Process user selections
+    for num in "${selections[@]}"; do
+      if [[ -n "${extension_map[$num]}" ]]; then
+        selected_exts+=("${extension_map[$num]}")
+      else
+        log_error "Invalid selection: $num (ignoring)"
+      fi
+    done
+  fi
+
+  rm "$temp_file"
+
+  # Open extension pages
+  if [ ${#selected_exts[@]} -gt 0 ]; then
+    log_message "Closing any running Brave browser instances..."
+    # Use more specific process names to avoid killing our script
+    pkill -f "brave-browser" || true
+    pkill -f "brave " || true
+    pkill -f "/opt/brave" || true
+    pkill -f "flatpak run com.brave.Browser" || true
+    sleep 2
+    
+    # Build URLs for direct launch
+    local urls=""
+    echo -e "\nSelected extensions:"
+    for ext in "${selected_exts[@]}"; do
+      IFS='|' read -r id name <<< "$ext"
+      echo "- $name"
+      urls+=" https://chrome.google.com/webstore/detail/$id"
+    done
+    
+    # Open the browser with extension pages
+    log_message "Opening extensions in Brave browser..."
+    
+    if [ "$EUID" -eq 0 ]; then
+      # Running as root, need to switch to actual user
+      ACTUAL_USER=$(logname || echo "$SUDO_USER")
+      if [ -z "$ACTUAL_USER" ]; then
+        log_error "Could not determine the actual user"
+        return 1
+      fi
+      
+      # Direct command execution without creating a script file
+      log_message "Launching browser as user $ACTUAL_USER..."
+      USER_ID=$(id -u "$ACTUAL_USER")
+      
+      # Check if Wayland or X11
+      USER_SESSION_TYPE=$(sudo -u "$ACTUAL_USER" bash -c 'echo $XDG_SESSION_TYPE')
+      
+      if [[ "$USER_SESSION_TYPE" == "wayland" ]]; then
+        log_message "Detected Wayland session"
+        sudo -u "$ACTUAL_USER" bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$USER_ID/bus brave$urls &"
+      else
+        sudo -u "$ACTUAL_USER" bash -c "DISPLAY=:0 brave$urls &"
+      fi
+      
+      # If that fails, provide instructions
+      echo -e "\nIf Brave doesn't open automatically, please run this command in your terminal:"
+      echo "brave$urls"
+    else
+      # Not running as root, launch directly
+      log_message "Launching Brave browser..."
+      bash -c "brave$urls &"
+    fi
+    
+    # Wait for user to complete installation
+    echo -e "\nPlease install the selected extensions in the browser."
+    read -p "Have you completed installing the extensions? (y/n): " completed
+    
+    if [[ "$completed" =~ ^[Yy]$ ]]; then
+      read -p "Would you like to apply default optimizations now? (y/n): " optimize
+      if [[ "$optimize" =~ ^[Yy]$ ]]; then
+        apply_default_optimizations
+      fi
+    else
+      log_message "You can run the script again later to complete optimization."
+    fi
+  else
+    log_message "No extensions selected for installation."
+  fi
+}
 # Function to toggle experimental ad blocking
 toggle_experimental_adblock() {
   log_message "Checking current advanced ad blocking status..."
@@ -531,128 +670,46 @@ EOF
     log_error "Preferences file not found"
   fi
 }
-# Function to install recommended extensions - Fixed for permission issues
-install_recommended_extensions() {
-  log_message "Installing recommended Brave extensions..."
+
+# Function to install Brave and optimize
+install_brave_and_optimize() {
+  log_message "Starting Brave installation and optimization process..."
   
-  # Download extension data
-  local temp_file=$(mktemp)
-  if ! download_file "${GITHUB_BASE}/policies/consolidated_extensions.json" "$temp_file"; then
-    log_error "Failed to download extension data"
-    rm "$temp_file"
+  # Step 1: Select Brave variant
+  log_message "Select Brave variant to install..."
+  echo "1. Brave Stable"
+  echo "2. Brave Beta"
+  echo "3. Brave Nightly"
+  read -p "Enter your choice [1-3]: " variant
+  
+  case $variant in
+    1) variant_name="stable" ;;
+    2) variant_name="beta" ;;
+    3) variant_name="nightly" ;;
+    *) log_error "Invalid selection. Aborting."; return 1 ;;
+  esac
+  
+  # Step 2: Install selected Brave variant
+  install_brave_variant "$variant_name"
+  if [ $? -ne 0 ]; then
+    log_error "Failed to install Brave browser. Aborting."
     return 1
   fi
-
-  # Simplified approach - just list all extensions with numbers
-  echo -e "\n=== Available Extensions ==="
-  local i=1
-  declare -A extension_map
   
-  # Get all extensions regardless of category
-  while read -r ext_line; do
-    local id=$(echo "$ext_line" | cut -d'|' -f1)
-    local name=$(echo "$ext_line" | cut -d'|' -f2)
-    local description=$(echo "$ext_line" | cut -d'|' -f3)
-    local recommended=$(echo "$ext_line" | cut -d'|' -f4)
-    
-    # Mark recommended extensions with an asterisk
-    local mark=""
-    if [[ "$recommended" == "true" ]]; then
-      mark="*"
-    fi
-    
-    printf "%2d. %-25s - %s %s\n" "$i" "$name" "$description" "$mark"
-    extension_map["$i"]="$id|$name"
-    ((i++))
-  done < <(jq -r '.categories | to_entries[] | .value[] | [.id, .name, .description, (.recommended|tostring)] | join("|")' "$temp_file")
+  # Step 3: Apply default optimizations
+  log_message "Applying default optimizations and debloating Brave..."
+  apply_default_optimizations
   
-  echo -e "\n* = Recommended extension"
+  # Step 4: Select search engine
+  log_message "Select default search engine..."
+  set_search_engine
   
-  # Get user selection
-  echo -e "\nEnter space-separated numbers (1-$((i-1))) to select extensions"
-  echo -n "Press Enter to install recommended extensions only: "
-  read -a selections
+  # Step 5: Present extension selection UI
+  log_message "Select extensions to install..."
+  install_recommended_extensions
   
-  # Process selections
-  local selected_exts=()
-  if [ ${#selections[@]} -eq 0 ]; then
-    # Get recommended extensions
-    while read -r ext_line; do
-      local id=$(echo "$ext_line" | cut -d'|' -f1)
-      local name=$(echo "$ext_line" | cut -d'|' -f2)
-      selected_exts+=("$id|$name")
-    done < <(jq -r '.recommended_ids[] as $id | .categories | to_entries[] | .value[] | select(.id == $id) | [$id, .name] | join("|")' "$temp_file")
-  else
-    # Process user selections
-    for num in "${selections[@]}"; do
-      if [[ -n "${extension_map[$num]}" ]]; then
-        selected_exts+=("${extension_map[$num]}")
-      else
-        log_error "Invalid selection: $num (ignoring)"
-      fi
-    done
-  fi
-
-  rm "$temp_file"
-
-  # Open extension pages
-  if [ ${#selected_exts[@]} -gt 0 ]; then
-    log_message "Closing any running Brave browser instances..."
-    # Use more specific process names to avoid killing our script
-    pkill -f "brave-browser" || true
-    pkill -f "brave " || true
-    pkill -f "/opt/brave" || true
-    pkill -f "flatpak run com.brave.Browser" || true
-    sleep 2
-    
-    # Build URLs for direct launch
-    local urls=""
-    echo -e "\nSelected extensions:"
-    for ext in "${selected_exts[@]}"; do
-      IFS='|' read -r id name <<< "$ext"
-      echo "- $name"
-      urls+=" https://chrome.google.com/webstore/detail/$id"
-    done
-    
-    # Open the browser with extension pages
-    log_message "Opening extensions in Brave browser..."
-    
-    if [ "$EUID" -eq 0 ]; then
-      # Running as root, need to switch to actual user
-      ACTUAL_USER=$(logname || echo "$SUDO_USER")
-      if [ -z "$ACTUAL_USER" ]; then
-        log_error "Could not determine the actual user"
-        return 1
-      fi
-      
-      # Direct command execution without creating a script file
-      log_message "Launching browser as user $ACTUAL_USER..."
-      sudo -u "$ACTUAL_USER" bash -c "brave$urls &"
-      
-      # If that fails, provide instructions
-      echo -e "\nIf Brave doesn't open automatically, please run this command in your terminal:"
-      echo "brave$urls"
-    else
-      # Not running as root, launch directly
-      log_message "Launching Brave browser..."
-      bash -c "brave$urls &"
-    fi
-    
-    # Wait for user to complete installation
-    echo -e "\nPlease install the selected extensions in the browser."
-    read -p "Have you completed installing the extensions? (y/n): " completed
-    
-    if [[ "$completed" =~ ^[Yy]$ ]]; then
-      read -p "Would you like to apply default optimizations now? (y/n): " optimize
-      if [[ "$optimize" =~ ^[Yy]$ ]]; then
-        apply_default_optimizations
-      fi
-    else
-      log_message "You can run the script again later to complete optimization."
-    fi
-  else
-    log_message "No extensions selected for installation."
-  fi
+  log_message "Brave installation and optimization completed successfully."
+  log_message "Please restart Brave browser for all changes to take effect."
 }
 
 # Show menu function
@@ -668,7 +725,7 @@ show_menu() {
 "
 
   echo "A script to debloat Brave browser and apply optimizations..."
-  echo "*Note I am working on a new version of this script to cover smoothbrain Win and Mac users."
+  echo "*Note I am working on a new version of this script to cover Win and macOS users."
   echo
   echo "=== Brave Browser Optimization Menu ==="
   echo "1. Apply Default Optimizations (Recommended)"
@@ -704,19 +761,24 @@ show_menu() {
   echo "11. Remove Brave Rewards/VPN/Wallet"
   echo "    Disables cryptocurrency and rewards features"
   echo
-  echo "12. Toggle Experimental Ad Blocking (experimental)"
+  echo "12. Toggle Experimental Ad Blocking (testing)"
   echo "    Enhanced ad blocking - Will check current status"
   echo
   echo "13. Install Recommended Brave extensions"
-  echo "    Installs a curated set of recommended extensions"
+  echo "    Installs a curated set of recommended extensions (partially automated)"
   echo
-  echo "14. Exit"
+  echo "14. Install Dashboard Customizer Extension (automated, launch with Brave Debloat.desktop)"
+  echo "    Replaces Brave's dashboard black background and clock, includes color picker, say goodbye to Brave Crypto backgrounds"
+  echo
+  echo "15. Revert All Changes (testing)"
+  echo "    Removes all changes made by this script"
+  echo
+  echo "16. Exit"
   echo
   echo "You can select multiple options by entering numbers separated by spaces (e.g., 4 5 8)"
-  echo "Note: Options 1 and 2 cannot be combined with other options"
+  echo "Note: Options 1, 2, and 15 cannot be combined with other options"
   echo
 }
-
 # Main function
 main() {
   locate_brave_files
@@ -724,22 +786,22 @@ main() {
   while true; do
     show_menu
     
-    read -p "Enter your choice(s) [1-14]: " choices
+    read -p "Enter your choice(s) [1-16]: " choices
     
     # Convert input to array
     IFS=' ' read -ra selected_options <<< "$choices"
     
-    # Check for exclusive options (1 and 2)
+    # Check for exclusive options (1, 2, and 15)
     local has_exclusive=0
     for choice in "${selected_options[@]}"; do
-      if [[ "$choice" == "1" || "$choice" == "2" ]]; then
+      if [[ "$choice" == "1" || "$choice" == "2" || "$choice" == "15" ]]; then
         has_exclusive=1
         break
       fi
     done
     
     if [[ $has_exclusive -eq 1 && ${#selected_options[@]} -gt 1 ]]; then
-      log_error "Options 1 and 2 cannot be combined with other options"
+      log_error "Options 1, 2, and 15 cannot be combined with other options"
       sleep 2.5
       continue
     fi
@@ -852,6 +914,17 @@ EOF
           sleep 2.5
           ;;
         14)
+          install_dashboard_customizer
+          sleep 2.5
+          ;;
+        15)
+          read -p "Are you sure you want to revert all changes? (y/n): " confirm
+          if [[ "$confirm" =~ ^[Yy]$ ]]; then
+            revert_all_changes
+          fi
+          sleep 2.5
+          ;;
+        16)
           log_message "Exiting...
 Thank you for using Brave debloat, lets make Brave great again."
           sleep 2.5
@@ -872,9 +945,13 @@ Thank you for using Brave debloat, lets make Brave great again."
     fi
   done
 }
+
 # Check for required dependencies
 if ! command -v jq &> /dev/null; then
   log_error "jq is not installed. Please install it first."
+  echo "Debian/Ubuntu: sudo apt install jq"
+  echo "Fedora:        sudo dnf install jq"
+  echo "Arch:          sudo pacman -S jq"
   exit 1
 fi
 
