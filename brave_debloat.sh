@@ -254,28 +254,57 @@ install_dashboard_customizer() {
   log_message "Installing Brave Dashboard Customizer extension..."
   
   # Create directory if it doesn't exist
-  mkdir -p "/usr/share/brave"
+  mkdir -p "/usr/share/brave/dashboard-extension"
   
   # Download the extension
   local crx_url="${GITHUB_BASE}/brave-dashboard-customizer/brave-dashboard-customizer.crx"
   local crx_path="/usr/share/brave/brave-dashboard-customizer.crx"
+  local ext_dir="/usr/share/brave/dashboard-extension"
   
   if download_file "$crx_url" "$crx_path"; then
     chmod 644 "$crx_path"
     log_message "Dashboard Customizer extension downloaded successfully"
     
+    # Unpack the CRX file
+    log_message "Unpacking extension..."
+    mkdir -p "$ext_dir"
+    unzip -o "$crx_path" -d "$ext_dir" >/dev/null 2>&1
+    
+    # Create a permissions policy file for the extension
+    local ext_id=$(basename "$(find "$ext_dir" -name "manifest.json" -exec dirname {} \;)")
+    cat > "${POLICY_DIR}/extension_settings.json" << EOF
+{
+  "ExtensionSettings": {
+    "$ext_id": {
+      "installation_mode": "normal_installed",
+      "update_url": "https://clients2.google.com/service/update2/crx",
+      "toolbar_pin": "force_pinned"
+    }
+  }
+}
+EOF
+    chmod 644 "${POLICY_DIR}/extension_settings.json"
+    
     # Update the desktop entry to load the extension
     local desktop_file="/usr/share/applications/brave-debloat.desktop"
     if [[ -f "$desktop_file" ]]; then
-      # Check if the extension is already in the Exec line
-      if ! grep -q -- "--load-extension=${crx_path}" "$desktop_file"; then
-        sed -i "s|^Exec=brave|Exec=brave --load-extension=${crx_path}|" "$desktop_file"
-        log_message "Desktop entry updated to load Dashboard Customizer"
+      # Update or add the load-extension parameter
+      if grep -q -- "--load-extension=" "$desktop_file"; then
+        sed -i "s|--load-extension=[^ ]*|--load-extension=$ext_dir|" "$desktop_file"
+      else
+        sed -i "s|^Exec=brave|Exec=brave --load-extension=$ext_dir|" "$desktop_file"
       fi
+      
+      # Add homepage parameter if not present
+      if ! grep -q -- "--homepage=" "$desktop_file"; then
+        sed -i "s|--load-extension=$ext_dir|--load-extension=$ext_dir --homepage=chrome://newtab|" "$desktop_file"
+      fi
+      
+      log_message "Desktop entry updated to load Dashboard Customizer"
     else
       # Create a new desktop entry if it doesn't exist
       create_desktop_entry
-      sed -i "s|^Exec=brave|Exec=brave --load-extension=${crx_path}|" "$desktop_file"
+      sed -i "s|^Exec=brave|Exec=brave --load-extension=$ext_dir --homepage=chrome://newtab|" "$desktop_file"
       log_message "Desktop entry created with Dashboard Customizer"
     fi
     
