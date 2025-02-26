@@ -1,0 +1,10 @@
+{
+  "HardwareAccelerationModeEnabled": true,
+  "MemorySaverEnabled": true,
+  "BackgroundModeEnabled": false,
+  "DefaultSearchProviderEnabled": true,
+  "DefaultSearchProviderName": "Brave Search",
+  "DefaultSearchProviderSearchURL": "https://search.brave.com/search?q={searchTerms}",
+  "SyncDisabled": true,
+  "BraveSyncEnabled": false
+}

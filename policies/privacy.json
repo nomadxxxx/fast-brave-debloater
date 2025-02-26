@@ -1,0 +1,7 @@
+{
+  "MetricsReportingEnabled": false,
+  "CloudReportingEnabled": false,
+  "SafeBrowsingExtendedReportingEnabled": false,
+  "AutomaticallySendAnalytics": false,
+  "DnsOverHttpsMode": "automatic"
+}
