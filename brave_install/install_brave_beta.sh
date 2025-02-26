@@ -38,7 +38,7 @@ elif command -v pacman &> /dev/null; then
   # Arch based
   log_message "Detected Arch-based distribution"
   if command -v yay &> /dev/null; then
-    yay -S brave-beta-bin --noconfirm
+    yay -S brave-beta-bin
   else
     log_error "yay not found. Please install yay first."
     exit 1
