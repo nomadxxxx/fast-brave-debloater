@@ -1,16 +1,16 @@
 ![alt text](https://github.com/nomadxxxx/fast-brave-debloater/blob/main/logo.png) 
 
-A powerful optimization script that strips Brave Browser of bloat and enhances performance. Say goodbye to crypto popups, VPN promotions, and unnecessary features!
+A powerful optimization script that strips Brave Browser of bloat and enhances performance. Say goodbye to Brave crypto, VPN, Ad bullshit and unnecessary features!
 
 # Removes Brave Bloat
 
-❌ No more crypto wallet popups
+❌ No more crypto wallet
 
-❌ No more VPN promotions
+❌ No more Brave VPN promotions
 
 ❌ No more Brave Rewards notifications
 
-❌ No more AI Chat suggestions
+❌ No more LeoAI Chat suggestions
 
 ❌ No more unnecessary background processes
 
@@ -86,11 +86,23 @@ Select specific customizations:
 - Disable Brave Rewards/VPN/Wallet
 - Toggle Memory Saver
   --Automatically frees memory from inactive tabs
+- Enable experimental ad-blocking
+- Select from recommended extensions (ublock, protonpass, darkreader etc) to install
 
 ### To do
-- [ ] Implement experimental ad-blocking feature 
+- [X] Implement experimental ad-blocking feature 
 - [ ] Finish and test powershell version for windows
 - [ ] Make a script compatible with macOS
+
+### How the Script Works
+The script uses several mechanisms to debloat and optimize Brave:
+1. Policy Files: Creates and modifies JSON policy files in Brave's managed policies directory to control browser behavior at a system level (basically creates an enterprise policy to make changes persistent across Brave updates etc).
+2. Preferences Modification: Directly edits the Brave preferences file using jq to disable unwanted features and customize the browser experience.
+3.Local State Modification: Updates the Local State file to enable experimental features like advanced ad blocking.
+4. Desktop Entry Creation: Creates a custom desktop entry (brave-debloat.desktop) that launches Brave with optimized parameters/flags.
+5. Extension Installation: Provides a streamlined interface for installing recommended privacy and productivity extensions (note that this will not auto-install because of Brave security policies but it comes close to auto-installation).
+6. Policy Enforcement: Uses enterprise policies to permanently disable unwanted features like Brave Rewards, VPN, Wallet, and AI Chat.
+
 
 ⚠️ Important Notes
 - Requires root privileges. 
