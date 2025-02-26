@@ -26,7 +26,7 @@ The script also automates fresh Brave installs letting you pick from Stable, Bet
 
 ✅ Optimizes memory usage
 
-## Enhances Privacy and auto-installation of Brave
+## Enhances Privacy and Brave Autoinstall Options
 
 ✅ Disables telemetry
 
