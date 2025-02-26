@@ -1,8 +1,10 @@
 ![alt text](https://github.com/nomadxxxx/fast-brave-debloater/blob/main/logo.png) 
 
-A powerful optimization script that strips Brave Browser of bloat and enhances performance. Say goodbye to Brave crypto, VPN, Ad bullshit and unnecessary features! The script also automates fresh Brave installs letting you pick from Stable, Beta and Nightly variants.
+A powerful optimization script that strips Brave Browser of bloat and enhances performance. Say goodbye to Brave crypto, VPN, Ad bullshit and unnecessary features! 
 
-# Removes Brave Bloat
+The script also automates fresh Brave installs letting you pick from Stable, Beta and Nightly variants and automatically run defoalt debloat, search engine selection and extension install.
+
+# Removes Brave Bloat and improves performance
 
 ❌ No more crypto wallet
 
@@ -12,9 +14,7 @@ A powerful optimization script that strips Brave Browser of bloat and enhances p
 
 ❌ No more LeoAI Chat suggestions
 
-❌ No more unnecessary background processes
-
-## Improves Performance
+❌ No more unnecessary background processes (e.g. Brave Sync)
 
 ✅ Enables GPU acceleration for smoother browsing
 
@@ -26,7 +26,7 @@ A powerful optimization script that strips Brave Browser of bloat and enhances p
 
 ✅ Optimizes memory usage
 
-## Enhances Privacy
+## Enhances Privacy and auto-installation of Brave
 
 ✅ Disables telemetry
 
@@ -34,10 +34,9 @@ A powerful optimization script that strips Brave Browser of bloat and enhances p
 
 ✅ Stops background data collection
 
-✅ Disable Brave Sync (optional but recommended)
+✅ Allows you to automate brave intallation (installation, search engine prefs and extension installation)
 
-### Customizes for security
-
+### Search Engine Options
 Script allows you to choose your preferred privacy-respecting search engine:
 
 - DuckDuckGo (privacy focused but collects data)
@@ -50,6 +49,9 @@ Script allows you to choose your preferred privacy-respecting search engine:
 ...or worse options
 - Google (not recommended)
 - Bing (not recommended)
+  
+### Search Engine Options
+Script allows you to choose your preferred privacy-respecting search engine:
 
 ### 🔧 Installation
 ```
@@ -66,7 +68,12 @@ Apply Default Optimizations (recommended)
 - enables hardware rendering
 - provides full URLs, wide address bar
 - improves memory usage
-  
+
+Install Brave and Apply Customisation
+- Installs Brave variant you select, applies default optimizations (see above)
+- Makes you select a new Search Engine
+- Provides options for extension installation
+
 Select specific customizations:
 - Change Search Engine
   --  DuckDuckGo (Recommended)
