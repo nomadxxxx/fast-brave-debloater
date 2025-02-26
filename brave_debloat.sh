@@ -154,6 +154,43 @@ install_brave_variant() {
   fi
 }
 
+# Function to create desktop entry
+create_desktop_entry() {
+  log_message "Creating desktop entry for Brave Debloat..."
+  
+  # Download and install the icon
+  local icon_url="${GITHUB_BASE}/brave_icon.png"
+  local icon_path="/usr/share/icons/brave_debloat.png"
+  
+  log_message "Downloading Brave icon..."
+  if download_file "$icon_url" "$icon_path"; then
+    chmod 644 "$icon_path"
+    log_message "Icon installed successfully"
+  else
+    log_error "Failed to download icon, using default"
+  fi
+  
+  # Create the desktop entry file
+  local desktop_file="/usr/share/applications/brave-debloat.desktop"
+  
+  cat > "$desktop_file" << EOF
+[Desktop Entry]
+Version=1.0
+Name=Brave Debloat
+Exec=brave --enable-features=UseOzonePlatform --ozone-platform=wayland
+Icon=/usr/share/icons/brave_debloat.png
+Type=Application
+Categories=Network;WebBrowser;
+Terminal=false
+StartupNotify=true
+Comment=Debloated and optimized Brave browser
+EOF
+
+  chmod 644 "$desktop_file"
+  log_message "Desktop entry created successfully"
+  return 0
+}
+
 # Function to apply a policy from GitHub
 apply_policy() {
   local policy_name="$1"
@@ -166,21 +203,6 @@ apply_policy() {
     return 0
   else
     log_error "Failed to apply ${policy_name} policy"
-    return 1
-  fi
-}
-
-# Function to create desktop entry
-create_desktop_entry() {
-  log_message "Creating desktop entry for Brave Debloat..."
-  
-  local desktop_file="/usr/share/applications/brave-debloat.desktop"
-  if download_file "${GITHUB_BASE}/policies/brave-debloat.desktop" "$desktop_file"; then
-    chmod 644 "$desktop_file"
-    log_message "Desktop entry created successfully"
-    return 0
-  else
-    log_error "Failed to create desktop entry"
     return 1
   fi
 }
@@ -206,10 +228,15 @@ modify_dashboard_preferences() {
       .brave.today.should_show_brave_today_widget = false | 
       .brave.new_tab_page = (.brave.new_tab_page // {}) | 
       .brave.new_tab_page.show_clock = true | 
-      .brave.new_tab_page.show_search_widget = false' "${preferences_file}" > "${temp_file}"
+      .brave.new_tab_page.show_search_widget = false |
+      .brave.new_tab_page.show_branded_background_image = false |
+      .brave.new_tab_page.show_cards = false |
+      .brave.new_tab_page.show_background_image = false |
+      .brave.new_tab_page.show_stats = false |
+      .brave.new_tab_page.show_shortcuts = false' "${preferences_file}" > "${temp_file}"
   mv "${temp_file}" "${preferences_file}"
   chmod 644 "${preferences_file}"
-  log_message "Modified dashboard preferences"
+  log_message "Modified dashboard preferences - removed all widgets, added clock"
 }
 
 # Function to apply default optimizations
@@ -220,7 +247,7 @@ apply_default_optimizations() {
   apply_policy "adblock"
   apply_policy "privacy"
   apply_policy "ui"
-  apply_policy "features"
+  apply_policy "features"  # Added features.json
   create_desktop_entry
   modify_dashboard_preferences
   
@@ -703,12 +730,18 @@ main() {
     IFS=' ' read -ra selected_options <<< "$choices"
     
     # Check for exclusive options (1 and 2)
-    if [[ "${selected_options[*]}" =~ 1 ]] || [[ "${selected_options[*]}" =~ 2 ]]; then
-      if [ ${#selected_options[@]} -gt 1 ]; then
-        log_error "Options 1 and 2 cannot be combined with other options"
-        sleep 2.5
-        continue
+    local has_exclusive=0
+    for choice in "${selected_options[@]}"; do
+      if [[ "$choice" == "1" || "$choice" == "2" ]]; then
+        has_exclusive=1
+        break
       fi
+    done
+    
+    if [[ $has_exclusive -eq 1 && ${#selected_options[@]} -gt 1 ]]; then
+      log_error "Options 1 and 2 cannot be combined with other options"
+      sleep 2.5
+      continue
     fi
     
     # Process each selected option
@@ -806,16 +839,8 @@ EOF
           ;;
         11)
           log_message "Removing Brave Rewards/VPN/Wallet..."
-          cat > "${POLICY_DIR}/features.json" << EOF
-{
-  "BraveRewardsDisabled": true,
-  "BraveVPNDisabled": true,
-  "BraveWalletDisabled": true,
-  "BraveAIChatEnabled": false
-}
-EOF
-          chmod 644 "${POLICY_DIR}/features.json"
-          log_message "Brave Rewards/VPN/Wallet disabled"
+          apply_policy "features"
+          log_message "Brave Rewards/VPN/Wallet disabled and icons hidden"
           sleep 2.5
           ;;
         12)
@@ -840,14 +865,13 @@ Thank you for using Brave debloat, lets make Brave great again."
     done
     
     # If we've processed all options, show a summary
-    if [ ${#selected_options[@]} -gt 1 ]; then
+    if [ ${#selected_options[@]} -gt 0 ]; then
       log_message "All selected options have been processed."
       log_message "Please restart Brave browser for all changes to take effect."
       sleep 2.5
     fi
   done
 }
-
 # Check for required dependencies
 if ! command -v jq &> /dev/null; then
   log_error "jq is not installed. Please install it first."
