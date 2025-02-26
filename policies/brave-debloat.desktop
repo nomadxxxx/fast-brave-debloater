@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=Brave Debloat
+Comment=Privacy-focused web browser with optimizations
+Exec=brave --enable-gpu-rasterization --enable-zero-copy --ignore-gpu-blocklist --enable-vulkan --enable-parallel-downloading --enable-features=brave-adblock-experimental-list-default %U
+Terminal=false
+Type=Application
+Categories=Network;WebBrowser;
+MimeType=application/pdf;application/rdf+xml;application/rss+xml;application/xhtml+xml;application/xml;image/gif;image/jpeg;image/png;image/webp;text/html;text/xml;x-scheme-handler/http;x-scheme-handler/https;
+Icon=/usr/share/brave/brave_icon.png
