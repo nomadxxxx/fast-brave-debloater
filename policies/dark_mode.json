@@ -1,0 +1,8 @@
+{
+  "NativeTheme": 2,
+  "DefaultThemeSettings": {
+    "use_system": false,
+    "custom_theme": "dark"
+  },
+  "BrowserThemeColor": "#1e1e2e"
+}
