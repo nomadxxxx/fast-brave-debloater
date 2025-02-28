@@ -177,16 +177,32 @@ apply_policy() {
 create_desktop_entry() {
   log_message "Creating desktop entry for Brave Debloat..."
   
-  # Download and install the icon
-  local icon_url="${GITHUB_BASE}/brave_icon.png"
-  local icon_path="/usr/share/icons/brave_debloat.png"
+  # Use existing Brave icon
+  local icon_path="brave-browser"
   
-  log_message "Downloading Brave icon..."
-  if download_file "$icon_url" "$icon_path"; then
-    chmod 644 "$icon_path"
-    log_message "Icon installed successfully"
+  # Determine correct executable based on distribution
+  local brave_exec=""
+  if command -v brave-browser-stable &> /dev/null; then
+    brave_exec="brave-browser-stable"
+  elif command -v brave-browser &> /dev/null; then
+    brave_exec="brave-browser"
+  elif command -v brave &> /dev/null; then
+    brave_exec="brave"
   else
-    log_error "Failed to download icon, using default"
+    log_error "Could not find Brave executable"
+    return 1
+  fi
+  
+  # Detect if running on Wayland or X11
+  local session_type="x11"
+  if [ "$XDG_SESSION_TYPE" = "wayland" ]; then
+    session_type="wayland"
+  fi
+  
+  # Set appropriate flags based on session type
+  local display_flags=""
+  if [ "$session_type" = "wayland" ]; then
+    display_flags="--enable-features=UseOzonePlatform --ozone-platform=wayland"
   fi
   
   # Create the desktop entry file
@@ -196,17 +212,39 @@ create_desktop_entry() {
 [Desktop Entry]
 Version=1.0
 Name=Brave Debloat
-Exec=brave --enable-features=UseOzonePlatform --ozone-platform=wayland
-Icon=/usr/share/icons/brave_debloat.png
+GenericName=Web Browser
+Comment=Debloated and optimized Brave browser
+Exec=${brave_exec} ${display_flags} %U
+Icon=${icon_path}
 Type=Application
 Categories=Network;WebBrowser;
 Terminal=false
 StartupNotify=true
-Comment=Debloated and optimized Brave browser
+MimeType=application/pdf;application/rdf+xml;application/rss+xml;application/xhtml+xml;application/xhtml_xml;application/xml;image/gif;image/jpeg;image/png;image/webp;text/html;text/xml;x-scheme-handler/http;x-scheme-handler/https;
+Actions=new-window;new-private-window;
+
+[Desktop Action new-window]
+Name=New Window
+Exec=${brave_exec} ${display_flags}
+
+[Desktop Action new-private-window]
+Name=New Incognito Window
+Exec=${brave_exec} ${display_flags} --incognito
 EOF
 
   chmod 644 "$desktop_file"
-  log_message "Desktop entry created successfully"
+  
+  # Update desktop database to ensure the entry is recognized
+  if command -v update-desktop-database &> /dev/null; then
+    update-desktop-database
+  fi
+  
+  # Update icon cache to ensure the icon is recognized
+  if command -v gtk-update-icon-cache &> /dev/null; then
+    gtk-update-icon-cache -f -t /usr/share/icons/hicolor
+  fi
+  
+  log_message "Desktop entry created successfully with executable: ${brave_exec}"
   return 0
 }
 
@@ -310,27 +348,46 @@ EOF
     chmod 644 "${POLICY_DIR}/extension_settings.json"
     
     # Update the desktop entry to load the extension
-    local desktop_file="/usr/share/applications/brave-debloat.desktop"
-    if [[ -f "$desktop_file" ]]; then
-      # Update or add the load-extension parameter
-      if grep -q -- "--load-extension=" "$desktop_file"; then
-        sed -i "s|--load-extension=[^ ]*|--load-extension=$ext_dir|" "$desktop_file"
-      else
-        sed -i "s|^Exec=brave|Exec=brave --load-extension=$ext_dir|" "$desktop_file"
-      fi
-      
-      # Add homepage parameter if not present
-      if ! grep -q -- "--homepage=" "$desktop_file"; then
-        sed -i "s|--load-extension=$ext_dir|--load-extension=$ext_dir --homepage=chrome://newtab|" "$desktop_file"
-      fi
-      
-      log_message "Desktop entry updated to load Dashboard Customizer"
-    else
-      # Create a new desktop entry if it doesn't exist
-      create_desktop_entry
-      sed -i "s|^Exec=brave|Exec=brave --load-extension=$ext_dir --homepage=chrome://newtab|" "$desktop_file"
-      log_message "Desktop entry created with Dashboard Customizer"
-    fi
+local desktop_file="/usr/share/applications/brave-debloat.desktop"
+if [[ -f "$desktop_file" ]]; then
+  # Get the current executable name from the desktop file
+  local brave_exec=$(grep "^Exec=" "$desktop_file" | sed -E 's/Exec=([^ ]+).*/\1/')
+  
+  # Update or add the load-extension parameter
+  if grep -q -- "--load-extension=" "$desktop_file"; then
+    sed -i "s|--load-extension=[^ ]*|--load-extension=$ext_dir|" "$desktop_file"
+  else
+    sed -i "s|^Exec=$brave_exec|Exec=$brave_exec --load-extension=$ext_dir|" "$desktop_file"
+  fi
+  
+  # Add homepage parameter if not present
+  if ! grep -q -- "--homepage=" "$desktop_file"; then
+    sed -i "s|--load-extension=$ext_dir|--load-extension=$ext_dir --homepage=chrome://newtab|" "$desktop_file"
+  fi
+  
+  # Also update the Actions sections
+  if grep -q "\[Desktop Action" "$desktop_file"; then
+    sed -i "/\[Desktop Action/,/^$/s|^Exec=$brave_exec|Exec=$brave_exec --load-extension=$ext_dir|" "$desktop_file"
+  fi
+  
+  log_message "Desktop entry updated to load Dashboard Customizer"
+else
+  # Create a new desktop entry if it doesn't exist
+  create_desktop_entry
+  
+  # Get the executable name from the newly created desktop file
+  local brave_exec=$(grep "^Exec=" "$desktop_file" | sed -E 's/Exec=([^ ]+).*/\1/')
+  
+  # Add extension loading parameters
+  sed -i "s|^Exec=$brave_exec|Exec=$brave_exec --load-extension=$ext_dir --homepage=chrome://newtab|" "$desktop_file"
+  
+  # Update the Actions sections too
+  if grep -q "\[Desktop Action" "$desktop_file"; then
+    sed -i "/\[Desktop Action/,/^$/s|^Exec=$brave_exec|Exec=$brave_exec --load-extension=$ext_dir|" "$desktop_file"
+  fi
+  
+  log_message "Desktop entry created with Dashboard Customizer"
+fi
     
     return 0
   else
