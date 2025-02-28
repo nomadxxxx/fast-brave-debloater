@@ -53,7 +53,7 @@ Script allows you to choose your preferred privacy-respecting search engine:
 ### Search Engine Options
 Script allows you to choose your preferred privacy-respecting search engine:
 
-### 🔧 Installation
+### 🔧 Installation (Linux)
 ```
 git clone https://github.com/nomadxxxx/fast-brave-debloater.git
 cd fast-brave-debloater
@@ -99,6 +99,10 @@ Select specific customizations:
 ### To do
 - [X] Implement experimental ad-blocking feature
 - [X] Implement Brave install automation
+- [ ] Implement auto-install extensions
+- [ ] Fix install script for Fedora
+- [ ] uBlock Origin, Dark Reader and Dark theme included as default
+- [ ] Update readme to explain new features 
 - [ ] Finish and test powershell version for windows
 - [ ] Make a script compatible with macOS
 
