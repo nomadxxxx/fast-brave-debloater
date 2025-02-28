@@ -247,7 +247,6 @@ EOF
   log_message "Desktop entry created successfully with executable: ${brave_exec}"
   return 0
 }
-
 # Function to modify dashboard preferences
 modify_dashboard_preferences() {
   local preferences_file="${BRAVE_PREFS}"
@@ -278,6 +277,32 @@ modify_dashboard_preferences() {
   mv "${temp_file}" "${preferences_file}"
   chmod 644 "${preferences_file}"
   log_message "Modified dashboard preferences - removed all widgets, added clock"
+}
+
+# Function to set brave dark mode
+set_brave_dark_mode() {
+  log_message "Setting Brave to dark mode..."
+  
+  local preferences_file="${BRAVE_PREFS}"
+  
+  # Ensure the Preferences directory exists
+  mkdir -p "${PREFERENCES_DIR}"
+  
+  # Create or modify Preferences file
+  if [[ ! -f "${preferences_file}" ]]; then
+    echo "{}" > "${preferences_file}"
+  fi
+  
+  # Use jq to modify the Preferences file
+  local temp_file="${preferences_file}.tmp"
+  jq '.brave = (.brave // {}) | 
+      .brave.dark_mode = (.brave.dark_mode // {}) |
+      .brave.dark_mode.enabled = true |
+      .brave.dark_mode.system_theme_detection = false' "${preferences_file}" > "${temp_file}"
+  mv "${temp_file}" "${preferences_file}"
+  chmod 644 "${preferences_file}"
+  
+  log_message "Brave dark mode enabled"
 }
 
 # Function to apply default optimizations
@@ -348,79 +373,216 @@ EOF
     chmod 644 "${POLICY_DIR}/extension_settings.json"
     
     # Update the desktop entry to load the extension
-local desktop_file="/usr/share/applications/brave-debloat.desktop"
-if [[ -f "$desktop_file" ]]; then
-  log_message "Updating existing desktop entry..."
-  
-  # Create a temporary file
-  local temp_file=$(mktemp)
-  
-  # Get the current executable name from the desktop file
-  local brave_exec=$(grep "^Exec=" "$desktop_file" | head -1 | sed -E 's/Exec=([^ ]+).*/\1/')
-  log_message "Found Brave executable: ${brave_exec}"
-  
-  # Process the desktop file line by line
-while IFS= read -r line; do
-  if [[ "$line" =~ ^Exec= ]]; then
-    # This is an Exec line
-    if [[ "$line" =~ --load-extension= ]]; then
-      # Already has load-extension, replace it
-      line=$(echo "$line" | sed -E "s|(--load-extension=)[^ ]*|\1$ext_dir|")
+    local desktop_file="/usr/share/applications/brave-debloat.desktop"
+    if [[ -f "$desktop_file" ]]; then
+      log_message "Updating existing desktop entry..."
+      
+      # Create a temporary file
+      local temp_file=$(mktemp)
+      
+      # Get the current executable name from the desktop file
+      local brave_exec=$(grep "^Exec=" "$desktop_file" | head -1 | sed -E 's/Exec=([^ ]+).*/\1/')
+      log_message "Found Brave executable: ${brave_exec}"
+      
+      # Process the desktop file line by line
+      while IFS= read -r line; do
+        if [[ "$line" =~ ^Exec= ]]; then
+          # This is an Exec line
+          if [[ "$line" =~ --load-extension= ]]; then
+            # Already has load-extension, replace it
+            line=$(echo "$line" | sed -E "s|(--load-extension=)[^ ]*|\1$ext_dir|")
+          else
+            # Add load-extension
+            line="Exec=${brave_exec} --load-extension=${ext_dir} $(echo "$line" | sed -E "s|^Exec=${brave_exec} ?||")"
+          fi
+          
+          # Add homepage if not present
+          if ! [[ "$line" =~ --homepage= ]]; then
+            line="${line} --homepage=chrome://newtab"
+          fi
+          
+          # Add force-dark-mode if not present
+          if ! [[ "$line" =~ --force-dark-mode ]]; then
+            line="${line} --force-dark-mode"
+          fi
+        fi
+        echo "$line" >> "$temp_file"
+      done < "$desktop_file"
+      
+      # Replace the original file with our modified version
+      mv "$temp_file" "$desktop_file"
+      chmod 644 "$desktop_file"
+      
+      log_message "Desktop entry updated to load Dashboard Customizer"
     else
-      # Add load-extension
-      line="Exec=${brave_exec} --load-extension=${ext_dir} $(echo "$line" | sed -E "s|^Exec=${brave_exec} ?||")"
+      # Create a new desktop entry if it doesn't exist
+      log_message "Creating new desktop entry..."
+      create_desktop_entry
+      
+      # Get the executable name from the newly created desktop file
+      local brave_exec=$(grep "^Exec=" "$desktop_file" | head -1 | sed -E 's/Exec=([^ ]+).*/\1/')
+      log_message "Found Brave executable: ${brave_exec}"
+      
+      # Create a temporary file
+      local temp_file=$(mktemp)
+      
+      # Process the desktop file line by line
+      while IFS= read -r line; do
+        if [[ "$line" =~ ^Exec= ]]; then
+          # This is an Exec line
+          line="Exec=${brave_exec} --load-extension=${ext_dir} --homepage=chrome://newtab --force-dark-mode $(echo "$line" | sed -E "s|^Exec=${brave_exec} ?||")"
+        fi
+        echo "$line" >> "$temp_file"
+      done < "$desktop_file"
+      
+      # Replace the original file with our modified version
+      mv "$temp_file" "$desktop_file"
+      chmod 644 "$desktop_file"
+      
+      log_message "Desktop entry created with Dashboard Customizer"
     fi
     
-    # Add homepage if not present
-    if ! [[ "$line" =~ --homepage= ]]; then
-      line="${line} --homepage=chrome://newtab"
-    fi
-    
-    # Add force-dark-mode if not present
-    if ! [[ "$line" =~ --force-dark-mode ]]; then
-      line="${line} --force-dark-mode"
-    fi
-  fi
-  echo "$line" >> "$temp_file"
-done < "$desktop_file"
-
-  # Replace the original file with our modified version
-  mv "$temp_file" "$desktop_file"
-  chmod 644 "$desktop_file"
-  
-  log_message "Desktop entry updated to load Dashboard Customizer"
-else
-  # Create a new desktop entry if it doesn't exist
-  log_message "Creating new desktop entry..."
-  create_desktop_entry
-  
-  # Get the executable name from the newly created desktop file
-  local brave_exec=$(grep "^Exec=" "$desktop_file" | head -1 | sed -E 's/Exec=([^ ]+).*/\1/')
-  log_message "Found Brave executable: ${brave_exec}"
-  
-  # Create a temporary file
-  local temp_file=$(mktemp)
-  
-  # Process the desktop file line by line
-while IFS= read -r line; do
-  if [[ "$line" =~ ^Exec= ]]; then
-    # This is an Exec line
-    line="Exec=${brave_exec} --load-extension=${ext_dir} --homepage=chrome://newtab --force-dark-mode $(echo "$line" | sed -E "s|^Exec=${brave_exec} ?||")"
-  fi
-  echo "$line" >> "$temp_file"
-done < "$desktop_file"
-  
-  # Replace the original file with our modified version
-  mv "$temp_file" "$desktop_file"
-  chmod 644 "$desktop_file"
-  
-  log_message "Desktop entry created with Dashboard Customizer"
-fi
+    # Also enable dark mode in preferences
+    set_brave_dark_mode
     
     return 0
   else
     log_error "Failed to download Dashboard Customizer extension"
     return 1
+  fi
+}
+# Function to install extension from CRX file
+install_extension_from_crx() {
+  local ext_id="$1"
+  local ext_name="$2"
+  local crx_url="$3"
+  local ext_dir="/usr/share/brave/extensions/${ext_id}"
+  local crx_path="/usr/share/brave/extensions/${ext_id}.crx"
+  
+  log_message "Installing ${ext_name}..."
+  
+  # Create directory if it doesn't exist
+  mkdir -p "/usr/share/brave/extensions"
+  
+  # Download the extension
+  if download_file "$crx_url" "$crx_path"; then
+    chmod 644 "$crx_path"
+    
+    # Unpack the CRX file
+    mkdir -p "$ext_dir"
+    unzip -o "$crx_path" -d "$ext_dir" >/dev/null 2>&1
+    
+    # Add to extension settings policy
+    update_extension_settings "$ext_id" "$ext_name"
+    
+    log_message "${ext_name} installed successfully"
+    return 0
+  else
+    log_error "Failed to download ${ext_name}"
+    return 1
+  fi
+}
+
+# Function to update extension settings policy
+update_extension_settings() {
+  local ext_id="$1"
+  local ext_name="$2"
+  local policy_file="${POLICY_DIR}/extension_settings.json"
+  
+  # Create or update the extension settings policy
+  if [[ -f "$policy_file" ]]; then
+    # Policy file exists, add this extension to it
+    local temp_file="${policy_file}.tmp"
+    jq ".ExtensionSettings[\"${ext_id}\"] = {\"installation_mode\": \"normal_installed\", \"update_url\": \"https://clients2.google.com/service/update2/crx\"}" "$policy_file" > "$temp_file"
+    mv "$temp_file" "$policy_file"
+  else
+    # Create new policy file
+    cat > "$policy_file" << EOF
+{
+  "ExtensionSettings": {
+    "${ext_id}": {
+      "installation_mode": "normal_installed",
+      "update_url": "https://clients2.google.com/service/update2/crx"
+    }
+  }
+}
+EOF
+  fi
+  
+  chmod 644 "$policy_file"
+}
+
+# Function to update desktop entry with extension paths
+update_desktop_with_extensions() {
+  local desktop_file="/usr/share/applications/brave-debloat.desktop"
+  local extensions_dir="/usr/share/brave/extensions"
+  local dashboard_dir="/usr/share/brave/dashboard-extension"
+  
+  log_message "Updating desktop entry with installed extensions..."
+  
+  if [[ ! -f "$desktop_file" ]]; then
+    create_desktop_entry
+  fi
+  
+  # Get the current executable name from the desktop file
+  local brave_exec=$(grep "^Exec=" "$desktop_file" | head -1 | sed -E 's/Exec=([^ ]+).*/\1/')
+  
+  # Build the load-extension parameter with all installed extensions
+  local extension_paths=""
+  
+  # Add dashboard extension if it exists
+  if [[ -d "$dashboard_dir" ]]; then
+    extension_paths="$dashboard_dir"
+  fi
+  
+  # Add other extensions if they exist
+  if [[ -d "$extensions_dir" ]]; then
+    for ext_dir in "$extensions_dir"/*; do
+      if [[ -d "$ext_dir" ]]; then
+        if [[ -n "$extension_paths" ]]; then
+          extension_paths="${extension_paths},${ext_dir}"
+        else
+          extension_paths="${ext_dir}"
+        fi
+      fi
+    done
+  fi
+  
+  # Update the desktop entry if we have extensions to load
+  if [[ -n "$extension_paths" ]]; then
+    # Create a temporary file
+    local temp_file=$(mktemp)
+    
+    # Process the desktop file line by line
+    while IFS= read -r line; do
+      if [[ "$line" =~ ^Exec= ]]; then
+        # This is an Exec line
+        if [[ "$line" =~ --load-extension= ]]; then
+          # Already has load-extension, replace it
+          line=$(echo "$line" | sed -E "s|(--load-extension=)[^ ]*|\1$extension_paths|")
+        else
+          # Add load-extension
+          line="Exec=${brave_exec} --load-extension=${extension_paths} $(echo "$line" | sed -E "s|^Exec=${brave_exec} ?||")"
+        fi
+        
+        # Add homepage if not present
+        if ! [[ "$line" =~ --homepage= ]]; then
+          line="${line} --homepage=chrome://newtab"
+        fi
+        
+        # Add force-dark-mode if not present
+        if ! [[ "$line" =~ --force-dark-mode ]]; then
+          line="${line} --force-dark-mode"
+        fi
+      fi
+      echo "$line" >> "$temp_file"
+    done < "$desktop_file"
+    
+    # Replace the original file with our modified version
+    mv "$temp_file" "$desktop_file"
+    chmod 644 "$desktop_file"
+    
+    log_message "Desktop entry updated with all installed extensions"
   fi
 }
 
@@ -444,6 +606,17 @@ revert_all_changes() {
   if [[ -f "/usr/share/brave/brave-dashboard-customizer.crx" ]]; then
     rm -f "/usr/share/brave/brave-dashboard-customizer.crx"
     log_message "Removed Dashboard Customizer extension"
+  fi
+  
+  # Remove unpacked extensions
+  if [[ -d "/usr/share/brave/dashboard-extension" ]]; then
+    rm -rf "/usr/share/brave/dashboard-extension"
+    log_message "Removed unpacked Dashboard Customizer extension"
+  fi
+  
+  if [[ -d "/usr/share/brave/extensions" ]]; then
+    rm -rf "/usr/share/brave/extensions"
+    log_message "Removed unpacked extensions"
   fi
   
   # Remove icon
@@ -585,139 +758,6 @@ EOF
     chmod 644 "${policy_file}"
   done
 }
-# Function to install recommended extensions
-install_recommended_extensions() {
-  log_message "Installing recommended Brave extensions..."
-  
-  # Download extension data
-  local temp_file=$(mktemp)
-  if ! download_file "${GITHUB_BASE}/policies/consolidated_extensions.json" "$temp_file"; then
-    log_error "Failed to download extension data"
-    rm "$temp_file"
-    return 1
-  fi
-
-  # Simplified approach - just list all extensions with numbers
-  echo -e "\n=== Available Extensions ==="
-  local i=1
-  declare -A extension_map
-  
-  # Get all extensions regardless of category
-  while read -r ext_line; do
-    local id=$(echo "$ext_line" | cut -d'|' -f1)
-    local name=$(echo "$ext_line" | cut -d'|' -f2)
-    local description=$(echo "$ext_line" | cut -d'|' -f3)
-    local recommended=$(echo "$ext_line" | cut -d'|' -f4)
-    
-    # Mark recommended extensions with an asterisk
-    local mark=""
-    if [[ "$recommended" == "true" ]]; then
-      mark="*"
-    fi
-    
-    printf "%2d. %-25s - %s %s\n" "$i" "$name" "$description" "$mark"
-    extension_map["$i"]="$id|$name"
-    ((i++))
-  done < <(jq -r '.categories | to_entries[] | .value[] | [.id, .name, .description, (.recommended|tostring)] | join("|")' "$temp_file")
-  
-  echo -e "\n* = Recommended extension"
-  
-  # Get user selection
-  echo -e "\nEnter space-separated numbers (1-$((i-1))) to select extensions"
-  echo -n "Press Enter to install recommended extensions only: "
-  read -a selections
-  
-  # Process selections
-  local selected_exts=()
-  if [ ${#selections[@]} -eq 0 ]; then
-    # Get recommended extensions
-    while read -r id; do
-      # Find name for this ID
-      local name=$(jq -r ".categories[][] | select(.id == \"$id\") | .name" "$temp_file")
-      selected_exts+=("$id|$name")
-    done < <(jq -r '.recommended_ids[]' "$temp_file")
-  else
-    # Process user selections
-    for num in "${selections[@]}"; do
-      if [[ -n "${extension_map[$num]}" ]]; then
-        selected_exts+=("${extension_map[$num]}")
-      else
-        log_error "Invalid selection: $num (ignoring)"
-      fi
-    done
-  fi
-
-  rm "$temp_file"
-
-  # Open extension pages
-  if [ ${#selected_exts[@]} -gt 0 ]; then
-    log_message "Closing any running Brave browser instances..."
-    # Use more specific process names to avoid killing our script
-    pkill -f "brave-browser" || true
-    pkill -f "brave " || true
-    pkill -f "/opt/brave" || true
-    pkill -f "flatpak run com.brave.Browser" || true
-    sleep 2
-    
-    # Build URLs for direct launch
-    local urls=""
-    echo -e "\nSelected extensions:"
-    for ext in "${selected_exts[@]}"; do
-      IFS='|' read -r id name <<< "$ext"
-      echo "- $name"
-      urls+=" https://chrome.google.com/webstore/detail/$id"
-    done
-    
-    # Open the browser with extension pages
-    log_message "Opening extensions in Brave browser..."
-    
-    if [ "$EUID" -eq 0 ]; then
-      # Running as root, need to switch to actual user
-      ACTUAL_USER=$(logname || echo "$SUDO_USER")
-      if [ -z "$ACTUAL_USER" ]; then
-        log_error "Could not determine the actual user"
-        return 1
-      fi
-      
-      # Direct command execution without creating a script file
-      log_message "Launching browser as user $ACTUAL_USER..."
-      USER_ID=$(id -u "$ACTUAL_USER")
-      
-      # Check if Wayland or X11
-      USER_SESSION_TYPE=$(sudo -u "$ACTUAL_USER" bash -c 'echo $XDG_SESSION_TYPE')
-      
-      if [[ "$USER_SESSION_TYPE" == "wayland" ]]; then
-        log_message "Detected Wayland session"
-        sudo -u "$ACTUAL_USER" bash -c "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$USER_ID/bus brave$urls &"
-      else
-        sudo -u "$ACTUAL_USER" bash -c "DISPLAY=:0 brave$urls &"
-      fi
-      
-      # If that fails, provide instructions
-      echo -e "\nIf Brave doesn't open automatically, please run this command in your terminal:"
-      echo "brave$urls"
-    else
-      # Not running as root, launch directly
-      log_message "Launching Brave browser..."
-      bash -c "brave$urls &"
-    fi
-    
-    # Wait for user to complete installation
-    echo -e "\nPlease install the selected extensions in the browser."
-    read -p "Have you completed installing the extensions? (y/n): " completed
-    
-    if [[ "$completed" =~ ^[Yy]$ ]]; then
-      read -p "Would you like to apply default optimizations now? (y/n): " optimize
-      if [[ "$optimize" =~ ^[Yy]$ ]]; then
-        apply_default_optimizations
-      fi
-    else
-      log_message "You can run the script again later to complete optimization."
-    fi
-  else
-    log_message "No extensions selected for installation."
-  fi
-}
 # Function to toggle experimental ad blocking
 toggle_experimental_adblock() {
   log_message "Checking current advanced ad blocking status..."
@@ -849,6 +889,89 @@ install_brave_and_optimize() {
   log_message "Brave installation and optimization completed successfully."
   log_message "Please restart Brave browser for all changes to take effect."
 }
+# Function to install recommended extensions
+install_recommended_extensions() {
+  log_message "Installing recommended Brave extensions..."
+  
+  # Download extension data
+  local temp_file=$(mktemp)
+  if ! download_file "${GITHUB_BASE}/policies/consolidated_extensions.json" "$temp_file"; then
+    log_error "Failed to download extension data"
+    rm "$temp_file"
+    return 1
+  fi
+
+  # Simplified approach - just list all extensions with numbers
+  echo -e "\n=== Available Extensions ==="
+  local i=1
+  declare -A extension_map
+  
+  # Get all extensions regardless of category
+  while read -r ext_line; do
+    local id=$(echo "$ext_line" | cut -d'|' -f1)
+    local name=$(echo "$ext_line" | cut -d'|' -f2)
+    local description=$(echo "$ext_line" | cut -d'|' -f3)
+    local recommended=$(echo "$ext_line" | cut -d'|' -f4)
+    local crx_url=$(echo "$ext_line" | cut -d'|' -f5)
+    
+    # Mark recommended extensions with an asterisk
+    local mark=""
+    if [[ "$recommended" == "true" ]]; then
+      mark="*"
+    fi
+    
+    printf "%2d. %-25s - %s %s\n" "$i" "$name" "$description" "$mark"
+    extension_map["$i"]="$id|$name|$crx_url"
+    ((i++))
+  done < <(jq -r '.categories | to_entries[] | .value[] | [.id, .name, .description, (.recommended|tostring), .crx_url] | join("|")' "$temp_file")
+  
+  echo -e "\n* = Recommended extension"
+  
+  # Get user selection
+  echo -e "\nEnter space-separated numbers (1-$((i-1))) to select extensions"
+  echo -n "Press Enter to install recommended extensions only: "
+  read -a selections
+  
+  # Process selections
+  local selected_exts=()
+  if [ ${#selections[@]} -eq 0 ]; then
+    # Get recommended extensions
+    while read -r ext_line; do
+      local id=$(echo "$ext_line" | cut -d'|' -f1)
+      local name=$(echo "$ext_line" | cut -d'|' -f2)
+      local crx_url=$(echo "$ext_line" | cut -d'|' -f3)
+      selected_exts+=("$id|$name|$crx_url")
+    done < <(jq -r '.recommended_ids[] as $id | .categories[][] | select(.id == $id) | [$id, .name, .crx_url] | join("|")' "$temp_file")
+  else
+    # Process user selections
+    for num in "${selections[@]}"; do
+      if [[ -n "${extension_map[$num]}" ]]; then
+        selected_exts+=("${extension_map[$num]}")
+      else
+        log_error "Invalid selection: $num (ignoring)"
+      fi
+    done
+  fi
+
+  rm "$temp_file"
+
+  # Install selected extensions
+  if [ ${#selected_exts[@]} -gt 0 ]; then
+    log_message "Installing selected extensions..."
+    
+    for ext in "${selected_exts[@]}"; do
+      IFS='|' read -r id name crx_url <<< "$ext"
+      install_extension_from_crx "$id" "$name" "$crx_url"
+    done
+    
+    # Update desktop entry with all extensions
+    update_desktop_with_extensions
+    
+    log_message "All extensions installed. Please restart Brave browser for changes to take effect."
+  else
+    log_message "No extensions selected for installation."
+  fi
+}
 
 # Show menu function
 show_menu() {
@@ -863,7 +986,7 @@ show_menu() {
 "
 
   echo "A script to debloat Brave browser and apply optimizations..."
-  echo "*Note I am working on a new version of this script to cover Win and macOS users."
+  echo "*Note I am working on a new version of this script to cover smoothbrain Win and Mac users."
   echo
   echo "=== Brave Browser Optimization Menu ==="
   echo "1. Apply Default Optimizations (Recommended)"
@@ -899,19 +1022,22 @@ show_menu() {
   echo "11. Remove Brave Rewards/VPN/Wallet"
   echo "    Disables cryptocurrency and rewards features"
   echo
-  echo "12. Toggle Experimental Ad Blocking (testing)"
+  echo "12. Toggle Experimental Ad Blocking (experimental)"
   echo "    Enhanced ad blocking - Will check current status"
   echo
   echo "13. Install Recommended Brave extensions"
-  echo "    Installs a curated set of recommended extensions (partially automated)"
+  echo "    Installs a curated set of recommended extensions"
   echo
-  echo "14. Install Dashboard Customizer Extension (automated, launch with Brave Debloat.desktop)"
-  echo "    Replaces Brave's dashboard black background and clock, includes color picker, say goodbye to Brave Crypto backgrounds"
+  echo "14. Install Dashboard Customizer Extension"
+  echo "    Replaces Brave's dashboard with a clean, black background and clock"
   echo
-  echo "15. Revert All Changes (testing)"
+  echo "15. Revert All Changes"
   echo "    Removes all changes made by this script"
   echo
-  echo "16. Exit"
+  echo "16. Enable Dark Mode"
+  echo "    Forces Brave to use dark theme regardless of system settings"
+  echo
+  echo "17. Exit"
   echo
   echo "You can select multiple options by entering numbers separated by spaces (e.g., 4 5 8)"
   echo "Note: Options 1, 2, and 15 cannot be combined with other options"
@@ -924,7 +1050,7 @@ main() {
   while true; do
     show_menu
     
-    read -p "Enter your choice(s) [1-16]: " choices
+    read -p "Enter your choice(s) [1-17]: " choices
     
     # Convert input to array
     IFS=' ' read -ra selected_options <<< "$choices"
@@ -1063,6 +1189,10 @@ EOF
           sleep 2.5
           ;;
         16)
+          set_brave_dark_mode
+          sleep 2.5
+          ;;
+        17)
           log_message "Exiting...
 Thank you for using Brave debloat, lets make Brave great again."
           sleep 2.5
