@@ -127,8 +127,32 @@ install_brave_variant() {
     "$temp_script"
     local result=$?
     rm "$temp_script"
-    return $result
+    
+    # Check if installation succeeded
+    if command -v brave-browser &> /dev/null || command -v brave &> /dev/null || command -v brave-browser-beta &> /dev/null || command -v brave-browser-nightly &> /dev/null; then
+      log_message "Brave Browser (${variant}) installed successfully."
+      return 0
+    fi
+    
+    # Fallback method only for stable variant
+    if [[ "$variant" == "stable" ]]; then
+      log_message "Standard installation methods failed. Trying Brave's official install script..."
+      curl -fsS https://dl.brave.com/install.sh | sh
+      
+      # Check again if installation succeeded
+      if command -v brave-browser &> /dev/null || command -v brave &> /dev/null; then
+        log_message "Brave Browser (stable) installed successfully using official script."
+        return 0
+      else
+        log_error "All installation methods failed."
+        return 1
+      fi
+    else
+      log_error "Installation of Brave Browser (${variant}) failed. No fallback available for non-stable variants."
+      return 1
+    fi
   else
+    log_error "Failed to download installation script for ${variant}"
     return 1
   fi
 }

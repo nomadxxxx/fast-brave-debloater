@@ -30,7 +30,7 @@ elif command -v dnf &> /dev/null; then
   # Fedora based
   log_message "Detected Fedora-based distribution"
   sudo dnf install dnf-plugins-core -y
-  sudo dnf config-manager --add-repo https://brave-browser-rpm-nightly.s3.brave.com/brave-browser-nightly.repo
+  sudo dnf config-manager --add-repo https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo
   sudo rpm --import https://brave-browser-rpm-nightly.s3.brave.com/brave-core-nightly.asc
   sudo dnf install brave-browser-nightly -y
   

@@ -31,7 +31,7 @@ elif command -v dnf &> /dev/null; then
   log_message "Detected Fedora-based distribution"
   sudo dnf install dnf-plugins-core -y
   sudo dnf config-manager --add-repo https://brave-browser-rpm-beta.s3.brave.com/brave-browser-beta.repo
-  sudo rpm --import https://brave-browser-rpm-beta.s3.brave.com/brave-core-nightly.asc
+  sudo rpm --import https://brave-browser-rpm-beta.s3.brave.com/brave-core.asc
   sudo dnf install brave-browser-beta -y
   
 elif command -v pacman &> /dev/null; then
@@ -47,7 +47,7 @@ elif command -v pacman &> /dev/null; then
 elif command -v zypper &> /dev/null; then
   # OpenSUSE
   log_message "Detected OpenSUSE distribution"
-  sudo rpm --import https://brave-browser-rpm-beta.s3.brave.com/brave-core-nightly.asc
+  sudo rpm --import https://brave-browser-rpm-beta.s3.brave.com/brave-core.asc
   sudo zypper addrepo https://brave-browser-rpm-beta.s3.brave.com/brave-browser-beta.repo
   sudo zypper install brave-browser-beta -y
   
