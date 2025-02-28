@@ -443,7 +443,7 @@ EOF
     fi
     
     # Also enable dark mode in preferences
-    set_brave_dark_mode
+    #set_brave_dark_mode
     
     return 0
   else
