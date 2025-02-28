@@ -350,47 +350,64 @@ EOF
     # Update the desktop entry to load the extension
 local desktop_file="/usr/share/applications/brave-debloat.desktop"
 if [[ -f "$desktop_file" ]]; then
+  log_message "Updating existing desktop entry..."
+  
+  # Create a temporary file
+  local temp_file=$(mktemp)
+  
   # Get the current executable name from the desktop file
-  local brave_exec=$(grep "^Exec=" "$desktop_file" | sed -E 's/Exec=([^ ]+).*/\1/')
+  local brave_exec=$(grep "^Exec=" "$desktop_file" | head -1 | sed -E 's/Exec=([^ ]+).*/\1/')
+  log_message "Found Brave executable: ${brave_exec}"
   
-  # Escape the extension directory path for sed
-  local escaped_ext_dir=$(echo "$ext_dir" | sed 's/[\/&]/\\&/g')
+  # Process the desktop file line by line
+  while IFS= read -r line; do
+    if [[ "$line" =~ ^Exec= ]]; then
+      # This is an Exec line
+      if [[ "$line" =~ --load-extension= ]]; then
+        # Already has load-extension, replace it
+        line=$(echo "$line" | sed -E "s|(--load-extension=)[^ ]*|\1$ext_dir|")
+      else
+        # Add load-extension
+        line="Exec=${brave_exec} --load-extension=${ext_dir} $(echo "$line" | sed -E "s|^Exec=${brave_exec} ?||")"
+      fi
+      
+      # Add homepage if not present
+      if ! [[ "$line" =~ --homepage= ]]; then
+        line="${line} --homepage=chrome://newtab"
+      fi
+    fi
+    echo "$line" >> "$temp_file"
+  done < "$desktop_file"
   
-  # Update or add the load-extension parameter
-  if grep -q -- "--load-extension=" "$desktop_file"; then
-    sed -i "s|--load-extension=[^ ]*|--load-extension=${escaped_ext_dir}|" "$desktop_file"
-  else
-    sed -i "s|^Exec=${brave_exec}|Exec=${brave_exec} --load-extension=${escaped_ext_dir}|" "$desktop_file"
-  fi
-  
-  # Add homepage parameter if not present
-  if ! grep -q -- "--homepage=" "$desktop_file"; then
-    sed -i "s|--load-extension=${escaped_ext_dir}|--load-extension=${escaped_ext_dir} --homepage=chrome://newtab|" "$desktop_file"
-  fi
-  
-  # Also update the Actions sections
-  if grep -q "\[Desktop Action" "$desktop_file"; then
-    sed -i "/\[Desktop Action/,/^$/s|^Exec=${brave_exec}|Exec=${brave_exec} --load-extension=${escaped_ext_dir}|" "$desktop_file"
-  fi
+  # Replace the original file with our modified version
+  mv "$temp_file" "$desktop_file"
+  chmod 644 "$desktop_file"
   
   log_message "Desktop entry updated to load Dashboard Customizer"
 else
   # Create a new desktop entry if it doesn't exist
+  log_message "Creating new desktop entry..."
   create_desktop_entry
   
   # Get the executable name from the newly created desktop file
-  local brave_exec=$(grep "^Exec=" "$desktop_file" | sed -E 's/Exec=([^ ]+).*/\1/')
+  local brave_exec=$(grep "^Exec=" "$desktop_file" | head -1 | sed -E 's/Exec=([^ ]+).*/\1/')
+  log_message "Found Brave executable: ${brave_exec}"
   
-  # Escape the extension directory path for sed
-  local escaped_ext_dir=$(echo "$ext_dir" | sed 's/[\/&]/\\&/g')
+  # Create a temporary file
+  local temp_file=$(mktemp)
   
-  # Add extension loading parameters
-  sed -i "s|^Exec=${brave_exec}|Exec=${brave_exec} --load-extension=${escaped_ext_dir} --homepage=chrome://newtab|" "$desktop_file"
+  # Process the desktop file line by line
+  while IFS= read -r line; do
+    if [[ "$line" =~ ^Exec= ]]; then
+      # This is an Exec line
+      line="Exec=${brave_exec} --load-extension=${ext_dir} --homepage=chrome://newtab $(echo "$line" | sed -E "s|^Exec=${brave_exec} ?||")"
+    fi
+    echo "$line" >> "$temp_file"
+  done < "$desktop_file"
   
-  # Update the Actions sections too
-  if grep -q "\[Desktop Action" "$desktop_file"; then
-    sed -i "/\[Desktop Action/,/^$/s|^Exec=${brave_exec}|Exec=${brave_exec} --load-extension=${escaped_ext_dir}|" "$desktop_file"
-  fi
+  # Replace the original file with our modified version
+  mv "$temp_file" "$desktop_file"
+  chmod 644 "$desktop_file"
   
   log_message "Desktop entry created with Dashboard Customizer"
 fi
