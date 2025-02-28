@@ -1,119 +1,196 @@
 {
-  "categories": {
-    "Adblocking": [
-      {
-        "name": "uBlock Origin",
-        "id": "cjpalhdlnbpafiamejdnhcphjbkeiagm",
-        "description": "Block ads and trackers (recommended)",
-        "recommended": true
-      },
-      {
-        "name": "Privacy Badger",
-        "id": "pkehgijcmpdhfbdbbnkijodmdjhbjlgp",
-        "description": "Learns to block trackers",
-        "recommended": false
-      },
-      {
-        "name": "Adblock Plus",
-        "id": "cfhdojbkjhnklbpkdaibdccddilifddb",
-        "description": "Block ads and popups",
-        "recommended": false
-      },
-      {
-        "name": "Decentraleyes",
-        "id": "ldpochfccmkkmhdbclfhpagapcfdljkj",
-        "description": "Local CDN emulation",
-        "recommended": false
-      }
-    ],
-    "Password Management": [
-      {
-        "name": "Bitwarden",
-        "id": "nngceckbapebfimnlniiiahkandclblb",
-        "description": "Password manager (recommended if self-hosted)",
-        "recommended": true
-      },
-      {
-        "name": "ProtonPass",
-        "id": "ghmbeldphafepmbegfdlkpapadhbakde",
-        "description": "Password manager (recommended if not self-hosted)",
-        "recommended": true
-      },
-      {
-        "name": "KeePassHelper",
-        "id": "jfpmbokkdeapjommajdfmmheiiakdlgo",
-        "description": "Open source password manager",
-        "recommended": false
-      },
-      {
-        "name": "Passbolt",
-        "id": "didegimhafipceonhjepacocaffmoppf",
-        "description": "Open source password manager",
-        "recommended": false
-      },
-      {
-        "name": "LastPass",
-        "id": "hdokiejnpimakedhajhdlcegeplioahd",
-        "description": "Popular password manager",
-        "recommended": false
-      }
-    ],
-    "Utilities": [
-      {
-        "name": "Dark Reader",
-        "id": "eimadpbcbfnmbkopoojfekhnkhdbieeh",
-        "description": "Dark mode for websites (recommended)",
-        "recommended": true
-      },
-      {
-        "name": "ClearURLs",
-        "id": "lckanjgmijmafbedllaakclkaicjfmnk",
-        "description": "Remove tracking elements from URLs",
-        "recommended": true
-      },
-      {
-        "name": "SponsorBlock",
-        "id": "mnjggcdmjocbbbhaepdhchncahnbgone",
-        "description": "Skip sponsored segments in videos",
-        "recommended": true
-      },
-      {
-        "name": "Return YouTube Dislike",
-        "id": "gebbhagfogifgggkldgodflihgfeippi",
-        "description": "Restore dislike counts on YouTube",
-        "recommended": true
-      },
-      {
-        "name": "Enhancer for YouTube",
-        "id": "ponfpcnoihfmfllpaingbgckeeldkhle",
-        "description": "Enhance YouTube experience",
-        "recommended": false
-      },
-      {
-        "name": "Tab Manager by Workona",
-        "id": "ailcmbgekjpnablpdkmaaccecekgdhlh",
-        "description": "Organize tabs into workspaces",
-        "recommended": false
-      },
-      {
-        "name": "TABLERONE Tab",
-        "id": "andpjllgocabfacjlelkfpdemfklpfpo",
-        "description": "Visual tab manager",
-        "recommended": false
-      },
-      {
-        "name": "Momentum",
-        "id": "laookkfknpbbblfpciffpaejjkokdgca",
-        "description": "Replace new tab page with productivity dashboard",
-        "recommended": false
-      }
-    ]
-  },
   "recommended_ids": [
     "cjpalhdlnbpafiamejdnhcphjbkeiagm",
-    "eimadpbcbfnmbkopoojfekhnkhdbieeh",
-    "mnjggcdmjocbbbhaepdhchncahnbgone",
-    "gebbhagfogifgggkldgodflihgfeippi",
-    "lckanjgmijmafbedllaakclkaicjfmnk"
-  ]
+    "cfhdojbkjhnklbpkdaibdccddilifddb",
+    "pkehgijcmpdhfbdbbnkijodmdjhbjlgp",
+    "ldpochfccmkkmhdbclfhpagapcfdljkj",
+    "lckanjgmijmafbedllaakclkaicjfmnk",
+    "eimadpbcbfnmbkopoojfekhnkhdbieeh"
+  ],
+  "categories": {
+    "privacy": [
+      {
+        "id": "cjpalhdlnbpafiamejdnhcphjbkeiagm",
+        "name": "uBlock Origin",
+        "description": "Efficient ad and tracker blocker",
+        "recommended": true,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/cjpalhdlnbpafiamejdnhcphjbkeiagm.crx"
+      },
+      {
+        "id": "cfhdojbkjhnklbpkdaibdccddilifddb",
+        "name": "Adblock Plus",
+        "description": "Block annoying ads on websites",
+        "recommended": true,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/cfhdojbkjhnklbpkdaibdccddilifddb.crx"
+      },
+      {
+        "id": "pkehgijcmpdhfbdbbnkijodmdjhbjlgp",
+        "name": "Privacy Badger",
+        "description": "Automatically blocks invisible trackers",
+        "recommended": true,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/pkehgijcmpdhfbdbbnkijodmdjhbjlgp.crx"
+      },
+      {
+        "id": "ldpochfccmkkmhdbclfhpagapcfdljkj",
+        "name": "Decentraleyes",
+        "description": "Protects against tracking through CDNs",
+        "recommended": true,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/ldpochfccmkkmhdbclfhpagapcfdljkj.crx"
+      },
+      {
+        "id": "lckanjgmijmafbedllaakclkaicjfmnk",
+        "name": "ClearURLs",
+        "description": "Removes tracking elements from URLs",
+        "recommended": true,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/lckanjgmijmafbedllaakclkaicjfmnk.crx"
+      }
+    ],
+    "password_managers": [
+      {
+        "id": "nngceckbapebfimnlniiiahkandclblb",
+        "name": "Bitwarden",
+        "description": "Free and open source password manager",
+        "recommended": false,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/nngceckbapebfimnlniiiahkandclblb.crx"
+      },
+      {
+        "id": "ghmbeldphafepmbegfdlkpapadhbakde",
+        "name": "ProtonPass",
+        "description": "Secure password manager by Proton",
+        "recommended": false,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/ghmbeldphafepmbegfdlkpapadhbakde.crx"
+      },
+      {
+        "id": "didegimhafipceonhjepacocaffmoppf",
+        "name": "PassBolt",
+        "description": "Open source password manager for teams",
+        "recommended": false,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/didegimhafipceonhjepacocaffmoppf.crx"
+      }
+    ],
+    "search": [
+      {
+        "id": "cdglnehniifkbagbbombnjghhcihifij",
+        "name": "Kagi Search Extension",
+        "description": "Fast, private search engine with no tracking",
+        "recommended": false,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/cdglnehniifkbagbbombnjghhcihifij.crx"
+      },
+      {
+        "id": "dpaefegpjhgeplnkomgbcmmlffkijbgp",
+        "name": "Kagi Summarizer",
+        "description": "AI-powered content summarization",
+        "recommended": false,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/dpaefegpjhgeplnkomgbcmmlffkijbgp.crx"
+      }
+    ],
+    "utilities": [
+      {
+        "id": "mnjggcdmjocbbbhaepdhchncahnbgone",
+        "name": "SponsorBlock",
+        "description": "Skip sponsorships in YouTube videos",
+        "recommended": false,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/mnjggcdmjocbbbhaepdhchncahnbgone.crx"
+      },
+      {
+        "id": "jinjaccalgkegednnccohejagnlnfdag",
+        "name": "Violentmonkey",
+        "description": "Userscript manager with enhanced security",
+        "recommended": false,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/jinjaccalgkegednnccohejagnlnfdag.crx"
+      },
+      {
+        "id": "gebbhagfogifgggkldgodflihgfeippi",
+        "name": "Return YouTube Dislike",
+        "description": "Shows dislikes on YouTube videos",
+        "recommended": false,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/gebbhagfogifgggkldgodflihgfeippi.crx"
+      },
+      {
+        "id": "eimadpbcbfnmbkopoojfekhnkhdbieeh",
+        "name": "Dark Reader",
+        "description": "Dark mode for every website",
+        "recommended": true,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/eimadpbcbfnmbkopoojfekhnkhdbieeh.crx"
+      }
+    ],
+    "productivity": [
+      {
+        "id": "andpjllgocabfacjlelkfpdemfklpfpo",
+        "name": "TABLERONE Tab Manager",
+        "description": "Organize and manage browser tabs efficiently",
+        "recommended": false,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/andpjllgocabfacjlelkfpdemfklpfpo.crx"
+      }
+    ],
+    "communication": [
+      {
+        "id": "jeogkiiogjbmhklcnbgkdcjoioegiknm",
+        "name": "Slack",
+        "description": "Team communication and collaboration tool",
+        "recommended": false,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/jeogkiiogjbmhklcnbgkdcjoioegiknm.crx"
+      }
+    ],
+    "vpn": [
+      {
+        "id": "jplgfhpmjnbigmhklmmbgecoobifkmpa",
+        "name": "ProtonVPN",
+        "description": "Secure VPN service with free tier",
+        "recommended": false,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/jplgfhpmjnbigmhklmmbgecoobifkmpa.crx"
+      },
+      {
+        "id": "fjoaledfpmneenckfbpdfhkmimnjocfa",
+        "name": "NordVPN",
+        "description": "Fast and secure VPN service",
+        "recommended": false,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/fjoaledfpmneenckfbpdfhkmimnjocfa.crx"
+      }
+    ],
+    "themes": [
+      {
+        "id": "cmpdlhmnmjhihmcfnigoememnffkimlk",
+        "name": "Catppuccin Chrome Theme - Macchiato",
+        "description": "Soothing pastel theme for Brave",
+        "recommended": false,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/themes/cmpdlhmnmjhihmcfnigoememnffkimlk.crx"
+      },
+      {
+        "id": "annfbnbieaamhaimclajlajpijgkdblo",
+        "name": "Dark Theme for Google Chrome",
+        "description": "Classic dark theme for Brave",
+        "recommended": false,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/themes/annfbnbieaamhaimclajlajpijgkdblo.crx"
+      },
+      {
+        "id": "aghfnjkcakhmadgdomlmlhhaocbkloab",
+        "name": "Just Black",
+        "description": "Simple black theme for Brave",
+        "recommended": false,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/themes/aghfnjkcakhmadgdomlmlhhaocbkloab.crx"
+      },
+      {
+        "id": "kioklelcojgbjoljlilalgdcppkiioge",
+        "name": "Void Theme - Black and Minimal",
+        "description": "Minimalist black theme for Brave",
+        "recommended": false,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/themes/kioklelcojgbjoljlilalgdcppkiioge.crx"
+      },
+      {
+        "id": "ookepigabmicjpgfnmncjiplegcacdbm",
+        "name": "Material Simple Dark Grey",
+        "description": "Dark grey material design theme",
+        "recommended": false,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/themes/ookepigabmicjpgfnmncjiplegcacdbm.crx"
+      },
+      {
+        "id": "brave_dark_mode",
+        "name": "Default Brave Dark Mode",
+        "description": "Built-in dark mode for Brave",
+        "recommended": false,
+        "crx_url": ""
+      }
+    ]
+  }
 }
