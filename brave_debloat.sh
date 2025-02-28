@@ -360,25 +360,30 @@ if [[ -f "$desktop_file" ]]; then
   log_message "Found Brave executable: ${brave_exec}"
   
   # Process the desktop file line by line
-  while IFS= read -r line; do
-    if [[ "$line" =~ ^Exec= ]]; then
-      # This is an Exec line
-      if [[ "$line" =~ --load-extension= ]]; then
-        # Already has load-extension, replace it
-        line=$(echo "$line" | sed -E "s|(--load-extension=)[^ ]*|\1$ext_dir|")
-      else
-        # Add load-extension
-        line="Exec=${brave_exec} --load-extension=${ext_dir} $(echo "$line" | sed -E "s|^Exec=${brave_exec} ?||")"
-      fi
-      
-      # Add homepage if not present
-      if ! [[ "$line" =~ --homepage= ]]; then
-        line="${line} --homepage=chrome://newtab"
-      fi
+while IFS= read -r line; do
+  if [[ "$line" =~ ^Exec= ]]; then
+    # This is an Exec line
+    if [[ "$line" =~ --load-extension= ]]; then
+      # Already has load-extension, replace it
+      line=$(echo "$line" | sed -E "s|(--load-extension=)[^ ]*|\1$ext_dir|")
+    else
+      # Add load-extension
+      line="Exec=${brave_exec} --load-extension=${ext_dir} $(echo "$line" | sed -E "s|^Exec=${brave_exec} ?||")"
     fi
-    echo "$line" >> "$temp_file"
-  done < "$desktop_file"
-  
+    
+    # Add homepage if not present
+    if ! [[ "$line" =~ --homepage= ]]; then
+      line="${line} --homepage=chrome://newtab"
+    fi
+    
+    # Add force-dark-mode if not present
+    if ! [[ "$line" =~ --force-dark-mode ]]; then
+      line="${line} --force-dark-mode"
+    fi
+  fi
+  echo "$line" >> "$temp_file"
+done < "$desktop_file"
+
   # Replace the original file with our modified version
   mv "$temp_file" "$desktop_file"
   chmod 644 "$desktop_file"
@@ -397,13 +402,13 @@ else
   local temp_file=$(mktemp)
   
   # Process the desktop file line by line
-  while IFS= read -r line; do
-    if [[ "$line" =~ ^Exec= ]]; then
-      # This is an Exec line
-      line="Exec=${brave_exec} --load-extension=${ext_dir} --homepage=chrome://newtab $(echo "$line" | sed -E "s|^Exec=${brave_exec} ?||")"
-    fi
-    echo "$line" >> "$temp_file"
-  done < "$desktop_file"
+while IFS= read -r line; do
+  if [[ "$line" =~ ^Exec= ]]; then
+    # This is an Exec line
+    line="Exec=${brave_exec} --load-extension=${ext_dir} --homepage=chrome://newtab --force-dark-mode $(echo "$line" | sed -E "s|^Exec=${brave_exec} ?||")"
+  fi
+  echo "$line" >> "$temp_file"
+done < "$desktop_file"
   
   # Replace the original file with our modified version
   mv "$temp_file" "$desktop_file"
