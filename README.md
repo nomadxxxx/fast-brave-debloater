@@ -43,7 +43,8 @@ A powerful optimization script that transforms Brave Browser into a privacy-focu
 ✅ Batch installs recommended extensions  
 ✅ Creates optimized desktop launcher with persistent settings  
 </p>
-## 🔍 Search Engine Options
+
+##  🔍 Search Engine Options
 
 Choose your preferred privacy-respecting search engine:
 
