@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-echo "Script starting..."  # Debug line
+echo "Script starting..."
 
 # Check for root privileges
 if [ "$EUID" -ne 0 ]; then
@@ -61,7 +61,7 @@ locate_brave_files() {
   fi
 
   if [[ -z "${BRAVE_EXEC}" ]]; then
-    BRAVE_EXEC="$(command -v brave || command -v brave-browser || command -v brave-browser-stable)"
+    BRAVE_EXEC="$(command -v brave-browser || command -v brave || command -v brave-browser-stable)"
     if [[ -z "${BRAVE_EXEC}" ]]; then
       log_message "Brave browser not found. Would you like to install it? (y/n)"
       read -p "> " install_choice
@@ -163,13 +163,10 @@ log_error() { echo -e "${RED}[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: $1${NC}"; }
 
 BRAVE_EXEC=$(command -v brave-browser || command -v brave || command -v brave-browser-stable)
 EXTENSIONS_DIR="/usr/share/brave/extensions"
-PREFERENCES_DIR="${HOME}/.config/BraveSoftware/Brave-Browser/Default"
-POLICY_DIR="/etc/brave/policies/managed"
-LOCAL_EXT_DIR="${PREFERENCES_DIR}/Local Extension Settings"
 THEMES_DIR="/usr/share/brave/themes"
 DASHBOARD_DIR="/usr/share/brave/dashboard-extension"
 
-# Ensure dashboard extension loads first
+# Load only non-default extensions
 EXTENSION_ARGS=""
 if [[ -d "$DASHBOARD_DIR" ]]; then
   EXTENSION_ARGS="--load-extension=${DASHBOARD_DIR}"
@@ -177,14 +174,14 @@ if [[ -d "$DASHBOARD_DIR" ]]; then
 fi
 if [[ -d "$EXTENSIONS_DIR" ]]; then
   for ext_dir in "$EXTENSIONS_DIR"/*; do
-    if [[ -d "$ext_dir" && "$ext_dir" != "$DASHBOARD_DIR" ]]; then
+    if [[ -d "$ext_dir" && "$ext_dir" != "$DASHBOARD_DIR" && ! "$(basename "$ext_dir")" =~ ^(cjpalhdlnbpafiamejdnhcphjbkeiagm|eimadpbcbfnmbkopoojfekhnkhdbieeh)$ ]]; then
       EXTENSION_ARGS="${EXTENSION_ARGS:+$EXTENSION_ARGS,}${ext_dir}"
     fi
   done
 fi
 if [[ -d "$THEMES_DIR" ]]; then
   for theme_dir in "$THEMES_DIR"/*; do
-    if [[ -d "$theme_dir" ]]; then
+    if [[ -d "$theme_dir" && ! "$(basename "$theme_dir")" =~ ^(annfbnbieaamhaimclajlajpijgkdblo)$ ]]; then
       EXTENSION_ARGS="${EXTENSION_ARGS:+$EXTENSION_ARGS,}${theme_dir}"
     fi
   done
@@ -197,7 +194,7 @@ if [[ -f "$DARK_MODE_FLAG" ]]; then
   DARK_MODE="--force-dark-mode"
 fi
 
-log_message "Launching Brave with managed extensions via policy"
+log_message "Launching Brave with managed extensions"
 exec "$BRAVE_EXEC" $EXTENSION_ARGS --homepage=chrome://newtab $DARK_MODE "$@"
 EOF
 
@@ -294,19 +291,20 @@ install_extension_from_crx() {
   local ext_dir="/usr/share/brave/extensions/${ext_id}"
   local crx_path="/usr/share/brave/extensions/${ext_id}.crx"
   
-  # Robust check: dir exists or policy has it
-  if [[ -d "$ext_dir" && ! -f "$ext_dir/_metadata" ]] || [[ -f "${POLICY_DIR}/extension_settings.json" && $(jq -e ".ExtensionSettings[\"${ext_id}\"]" "${POLICY_DIR}/extension_settings.json" >/dev/null 2>&1 && echo "true") == "true" ]]; then
-    log_message "${ext_name} is already installed"
-    return 0
+  if [[ -d "$ext_dir" ]]; then
+    if [[ ! -f "$ext_dir/_metadata" ]]; then
+      log_message "${ext_name} is already installed"
+      return 0
+    else
+      log_message "Cleaning up old ${ext_name} install..."
+      rm -rf "$ext_dir"
+    fi
   fi
   
   log_message "Installing ${ext_name}..."
   mkdir -p "/usr/share/brave/extensions"
   if download_file "$crx_url" "$crx_path"; then
     chmod 644 "$crx_path"
-    if [[ -d "$ext_dir" ]]; then
-      rm -rf "$ext_dir"  # Clean old install
-    fi
     mkdir -p "$ext_dir"
     unzip -o "$crx_path" -d "$ext_dir" >/dev/null 2>&1
     rm -rf "$ext_dir/_metadata"  # Fix _metadata error
@@ -357,9 +355,14 @@ install_theme() {
   fi
   
   local theme_dir="/usr/share/brave/themes/${theme_id}"
-  if [[ -d "$theme_dir" && ! -f "$theme_dir/_metadata" ]] || [[ -f "${POLICY_DIR}/extension_settings.json" && $(jq -e ".ExtensionSettings[\"${theme_id}\"]" "${POLICY_DIR}/extension_settings.json" >/dev/null 2>&1 && echo "true") == "true" ]]; then
-    log_message "Theme ${theme_name} is already installed"
-    return 0
+  if [[ -d "$theme_dir" ]]; then
+    if [[ ! -f "$theme_dir/_metadata" ]]; then
+      log_message "Theme ${theme_name} is already installed"
+      return 0
+    else
+      log_message "Cleaning up old ${theme_name} install..."
+      rm -rf "$theme_dir"
+    fi
   fi
   
   if [[ -f "${POLICY_DIR}/dark_mode.json" ]]; then
@@ -372,9 +375,6 @@ install_theme() {
   local crx_path="/usr/share/brave/themes/${theme_id}.crx"
   if download_file "$crx_url" "$crx_path"; then
     chmod 644 "$crx_path"
-    if [[ -d "$theme_dir" ]]; then
-      rm -rf "$theme_dir"  # Clean old install
-    fi
     mkdir -p "$theme_dir"
     unzip -o "$crx_path" -d "$theme_dir" >/dev/null 2>&1
     rm -rf "$theme_dir/_metadata"  # Fix _metadata error
@@ -631,9 +631,7 @@ EOF
         ;;
     esac
   done
-  # Kill all Brave processes
   pkill -9 -f "brave.*" || true
-  # Clear all search caches and overrides
   local secure_prefs="${HOME}/.config/BraveSoftware/Brave-Browser/Default/Secure Preferences"
   if [[ -f "$secure_prefs" ]]; then
     jq 'del(.extensions.settings[] | select(.search_provider)) | del(.omnibox)' "$secure_prefs" > "$secure_prefs.tmp"
@@ -653,7 +651,6 @@ apply_default_optimizations() {
   apply_policy "ui"
   apply_policy "features"
   create_desktop_entry
-  modify_dashboard_preferences
   
   log_message "Installing recommended extensions..."
   install_extension_from_crx "cjpalhdlnbpafiamejdnhcphjbkeiagm" "uBlock Origin" "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/cjpalhdlnbpafiamejdnhcphjbkeiagm.crx"
@@ -671,8 +668,10 @@ apply_default_optimizations() {
     log_message "Enabled advanced ad blocking flag in browser flags"
   fi
   
-  update_desktop_with_extensions
-  log_message "Default optimizations and recommended extensions applied successfully"
+  # Bundle Option 14
+  install_dashboard_customizer
+  
+  log_message "Default optimizations and dashboard customizer applied successfully"
   log_message "Please restart Brave browser for changes to take effect"
 }
 
@@ -695,7 +694,7 @@ update_desktop_with_extensions() {
   fi
   if [[ -d "$extensions_dir" ]]; then
     for ext_dir in "$extensions_dir"/*; do
-      if [[ -d "$ext_dir" && ! "$(basename "$ext_dir")" =~ ^(cjpalhdlnbpafiamejdnhcphjbkeiagm|eimadpbcbfnmbkopoojfekhnkhdbieeh)$ ]]; then  # Exclude defaults
+      if [[ -d "$ext_dir" && "$ext_dir" != "$dashboard_dir" ]]; then
         if [[ -n "$extension_paths" ]]; then
           extension_paths="${extension_paths},${ext_dir}"
         else
@@ -722,7 +721,7 @@ update_desktop_with_extensions() {
     done < "$desktop_file"
     mv "$temp_file" "$desktop_file"
     chmod 644 "$desktop_file"
-    log_message "Desktop entry updated with extra extensions"
+    log_message "Desktop entry updated with all installed extensions"
   else
     log_message "No extra extensions to update in desktop entry"
   fi
@@ -871,7 +870,7 @@ toggle_memory_saver() {
       log_message "Memory saver remains enabled"
     fi
   else
-    cat > "$policy_file" << EOF
+    cat > "${policy_file}" << EOF
 {
   "MemorySaverModeEnabled": true
 }
@@ -988,31 +987,39 @@ install_recommended_extensions() {
 install_dashboard_customizer() {
   local ext_id="dashboard-customizer"
   local ext_name="Dashboard Customizer"
-  local crx_url="https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/dashboard-customizer.crx"
+  local crx_url="https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/brave-dashboard-customizer/brave-dashboard-customizer.crx"
   local ext_dir="/usr/share/brave/dashboard-extension"
   
   log_message "Installing ${ext_name}..."
   
+  local crx_path="/usr/share/brave/${ext_id}.crx"
   if [[ -d "$ext_dir" ]]; then
-    log_message "${ext_name} is already installed"
-  else
-    local crx_path="/usr/share/brave/${ext_id}.crx"
-    if download_file "$crx_url" "$crx_path"; then
-      chmod 644 "$crx_path"
-      mkdir -p "$ext_dir"
-      unzip -o "$crx_path" -d "$ext_dir" >/dev/null 2>&1 || {
-        log_error "Failed to unzip ${crx_path}"
-        return 1
-      }
-      rm -rf "$ext_dir/_metadata"  # Fix _metadata error
-      log_message "${ext_name} installed successfully"
-    else
-      log_error "Failed to download ${ext_name} from ${crx_url}"
+    log_message "Removing old ${ext_name} install for fresh copy..."
+    rm -rf "$ext_dir"
+  fi
+  if download_file "$crx_url" "$crx_path"; then
+    chmod 644 "$crx_path"
+    if [[ ! -s "$crx_path" ]]; then
+      log_error "Downloaded ${crx_path} is empty or invalid"
+      ls -l "$crx_path"
       return 1
     fi
+    mkdir -p "$ext_dir"
+    log_message "Unzipping ${crx_path} to ${ext_dir}..."
+    unzip -o -q "$crx_path" -d "$ext_dir"
+    rm -rf "$ext_dir/_metadata"
+    if [[ ! -f "$ext_dir/manifest.json" ]]; then
+      log_error "Manifest file missing in ${ext_dir}"
+      ls -l "$ext_dir"
+      unzip -l "$crx_path"
+      return 1
+    fi
+    log_message "${ext_name} installed successfully"
+  else
+    log_error "Failed to download ${ext_name} from ${crx_url}"
+    return 1
   fi
   
-  # Register extension in policy
   local policy_file="${POLICY_DIR}/extension_settings.json"
   if [[ -f "$policy_file" ]]; then
     jq ".ExtensionSettings[\"${ext_id}\"] = {\"installation_mode\": \"normal_installed\", \"update_url\": \"https://clients2.google.com/service/update2/crx\", \"toolbar_pin\": \"force_pinned\"}" "$policy_file" > "$policy_file.tmp"
@@ -1032,7 +1039,6 @@ EOF
   fi
   chmod 644 "$policy_file"
   
-  # Strip Brave dashboard completely
   local prefs_file="${BRAVE_PREFS}"
   mkdir -p "${PREFERENCES_DIR}"
   if [[ ! -f "$prefs_file" ]]; then
@@ -1057,24 +1063,24 @@ EOF
   chmod 644 "$prefs_file"
   log_message "Stripped Brave dashboard features for ${ext_name}"
 
-  # Update desktop entry to load extension at startup
-  local desktop_file="/usr/share/applications/brave-debloat.desktop"
-  if [[ ! -f "$desktop_file" ]]; then
-    create_desktop_entry
-  fi
-  local brave_exec=$(grep "^Exec=" "$desktop_file" | head -1 | sed -E 's/Exec=([^ ]+).*/\1/')
-  local temp_file=$(mktemp)
-  while IFS= read -r line; do
-    if [[ "$line" =~ ^Exec= ]]; then
-      line="Exec=${brave_exec} --load-extension=${ext_dir} --homepage=chrome://newtab"
-    fi
-    echo "$line" >> "$temp_file"
-  done < "$desktop_file"
-  mv "$temp_file" "$desktop_file"
-  chmod 644 "$desktop_file"
-  log_message "Updated desktop entry to enforce ${ext_name} at startup"
+  rm -rf "${HOME}/.cache/BraveSoftware/Brave-Browser/*"
+  log_message "Cleared Brave cache to enforce ${ext_name}"
 
-  # Kill all Brave processes
+  local desktop_file="/usr/share/applications/brave-debloat.desktop"
+  if [[ -f "$desktop_file" ]]; then
+    local brave_exec=$(grep "^Exec=" "$desktop_file" | head -1 | sed -E 's/Exec=([^ ]+).*/\1/')
+    local temp_file=$(mktemp)
+    while IFS= read -r line; do
+      if [[ "$line" =~ ^Exec= ]]; then
+        line="Exec=${brave_exec} --load-extension=${ext_dir} --homepage=chrome://newtab"
+      fi
+      echo "$line" >> "$temp_file"
+    done < "$desktop_file"
+    mv "$temp_file" "$desktop_file"
+    chmod 644 "$desktop_file"
+    log_message "Updated desktop entry to enforce ${ext_name} at startup"
+  fi
+
   pkill -9 -f "brave.*" || true
   log_message "All Brave processes killed to apply ${ext_name}"
 }
@@ -1095,7 +1101,7 @@ show_menu() {
   echo
   echo "=== Brave Browser Optimization Menu ==="
   echo "1. Apply Default Optimizations (Recommended)"
-  echo "   Enables core performance features, removes bloat, and installs uBlock Origin, Dark Reader, and Dark Theme"
+  echo "   Enables core performance features, removes bloat, and installs uBlock Origin, Dark Reader, and Dashboard Customizer"
   echo
   echo "2. Install Brave and apply optimizations"
   echo "   Install Brave browser and apply recommended optimizations"
