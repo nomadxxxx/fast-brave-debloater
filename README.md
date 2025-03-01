@@ -67,6 +67,9 @@ sudo ./brave_debloat.sh
 ```
 ## 🔧 Installation (macOS) (TESTING)
 ```
+Install homebrew:
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" 
+Download and execute script:
 git clone https://github.com/nomadxxxx/fast-brave-debloater.git && cd fast-brave-debloater && chmod +x brave_debloat_macos.sh && sudo ./brave_debloat_macos.sh
 ```
 ## 📋 Menu Options
