@@ -1,8 +1,13 @@
-![alt text](https://github.com/nomadxxxx/fast-brave-debloater/blob/main/logo.png) 
+  
+<p align="center">
+  <img src="https://github.com/nomadxxxx/fast-brave-debloater/blob/main/assets/FastBraveDebloat_logo_small.png?raw=true" />
+</p>
 
-# Brave Browser Debloater & Optimizer
+<p align="center">
+A powerful optimization script that transforms Brave Browser into a privacy-focused browsing experience. This script removes unnecessary bloat, enhances performance, and automates installation.
+</p>
 
-A powerful optimization script that transforms Brave Browser into a streamlined, privacy-focused browsing experience. This script removes unnecessary bloat, enhances performance, and automates installation of privacy-preserving extensions.
+
 
 ## 🚀 Key Features
 
