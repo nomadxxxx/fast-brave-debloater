@@ -169,15 +169,26 @@ LOCAL_EXT_DIR="${PREFERENCES_DIR}/Local Extension Settings"
 THEMES_DIR="/usr/share/brave/themes"
 DASHBOARD_DIR="/usr/share/brave/dashboard-extension"
 
-declare -A EXTENSIONS=( ["cjpalhdlnbpafiamejdnhcphjbkeiagm"]="uBlock Origin" ["eimadpbcbfnmbkopoojfekhnkhdbieeh"]="Dark Reader" )
-declare -A THEMES=( ["annfbnbieaamhaimclajlajpijgkdblo"]="Dark Theme for Google Chrome" ["aghfnjkcakhmadgdomlmlhhaocbkloab"]="Another Theme" ["cmpdlhmnmjhihmcfnigoememnffkimlk"]="Yet Another Theme" ["kioklelcojgbjoljlilalgdcppkiioge"]="One More Theme" )
-
-is_extension_installed() { local ext_id="$1"; local ext_dir="${EXTENSIONS_DIR}/${ext_id}"; local local_ext_settings="${LOCAL_EXT_DIR}/${ext_id}"; local policy_file="${POLICY_DIR}/extension_settings.json"; [[ -d "$ext_dir" ]] && return 0; [[ -d "$local_ext_settings" ]] && return 0; [[ -f "$policy_file" ]] && grep -q "$ext_id" "$policy_file" 2>/dev/null && return 0; return 1; }
-is_theme_installed() { local theme_id="$1"; local theme_dir="${THEMES_DIR}/${theme_id}"; local policy_file="${POLICY_DIR}/extension_settings.json"; [[ -d "$theme_dir" ]] && return 0; [[ -f "$policy_file" ]] && grep -q "$theme_id" "$policy_file" 2>/dev/null && return 0; return 1; }
-
-for ext_id in "${!EXTENSIONS[@]}"; do if is_extension_installed "$ext_id"; then log_message "${EXTENSIONS[$ext_id]} is already installed"; else log_message "${EXTENSIONS[$ext_id]} is not installed. Please run the Brave Debloat script first."; fi; done
-for theme_id in "${!THEMES[@]}"; do if is_theme_installed "$theme_id"; then log_message "${THEMES[$theme_id]} is already installed"; else log_message "${THEMES[$theme_id]} is not installed. Please run the Brave Debloat script first."; fi; done
-if [[ -d "$DASHBOARD_DIR" ]]; then log_message "Dashboard Customizer is installed"; fi
+# Ensure dashboard extension loads first
+EXTENSION_ARGS=""
+if [[ -d "$DASHBOARD_DIR" ]]; then
+  EXTENSION_ARGS="--load-extension=${DASHBOARD_DIR}"
+  log_message "Dashboard Customizer is installed"
+fi
+if [[ -d "$EXTENSIONS_DIR" ]]; then
+  for ext_dir in "$EXTENSIONS_DIR"/*; do
+    if [[ -d "$ext_dir" && "$ext_dir" != "$DASHBOARD_DIR" ]]; then
+      EXTENSION_ARGS="${EXTENSION_ARGS:+$EXTENSION_ARGS,}${ext_dir}"
+    fi
+  done
+fi
+if [[ -d "$THEMES_DIR" ]]; then
+  for theme_dir in "$THEMES_DIR"/*; do
+    if [[ -d "$theme_dir" ]]; then
+      EXTENSION_ARGS="${EXTENSION_ARGS:+$EXTENSION_ARGS,}${theme_dir}"
+    fi
+  done
+fi
 
 # Check for dark mode flag
 DARK_MODE_FLAG="/tmp/brave_debloat_dark_mode"
@@ -187,7 +198,7 @@ if [[ -f "$DARK_MODE_FLAG" ]]; then
 fi
 
 log_message "Launching Brave with managed extensions via policy"
-exec "$BRAVE_EXEC" --homepage=chrome://newtab $DARK_MODE "$@"
+exec "$BRAVE_EXEC" $EXTENSION_ARGS --homepage=chrome://newtab $DARK_MODE "$@"
 EOF
 
   chmod +x "$wrapper_path"
@@ -283,8 +294,8 @@ install_extension_from_crx() {
   local ext_dir="/usr/share/brave/extensions/${ext_id}"
   local crx_path="/usr/share/brave/extensions/${ext_id}.crx"
   
-  # Check if installed via dir or policy
-  if [[ -d "$ext_dir" ]] || [[ -f "${POLICY_DIR}/extension_settings.json" && $(grep -q "$ext_id" "${POLICY_DIR}/extension_settings.json" 2>/dev/null && echo "true") == "true" ]]; then
+  # Robust check: dir exists or policy has it
+  if [[ -d "$ext_dir" && ! -f "$ext_dir/_metadata" ]] || [[ -f "${POLICY_DIR}/extension_settings.json" && $(jq -e ".ExtensionSettings[\"${ext_id}\"]" "${POLICY_DIR}/extension_settings.json" >/dev/null 2>&1 && echo "true") == "true" ]]; then
     log_message "${ext_name} is already installed"
     return 0
   fi
@@ -293,6 +304,9 @@ install_extension_from_crx() {
   mkdir -p "/usr/share/brave/extensions"
   if download_file "$crx_url" "$crx_path"; then
     chmod 644 "$crx_path"
+    if [[ -d "$ext_dir" ]]; then
+      rm -rf "$ext_dir"  # Clean old install
+    fi
     mkdir -p "$ext_dir"
     unzip -o "$crx_path" -d "$ext_dir" >/dev/null 2>&1
     rm -rf "$ext_dir/_metadata"  # Fix _metadata error
@@ -343,7 +357,7 @@ install_theme() {
   fi
   
   local theme_dir="/usr/share/brave/themes/${theme_id}"
-  if [[ -d "$theme_dir" ]] || [[ -f "${POLICY_DIR}/extension_settings.json" && $(grep -q "$theme_id" "${POLICY_DIR}/extension_settings.json" 2>/dev/null && echo "true") == "true" ]]; then
+  if [[ -d "$theme_dir" && ! -f "$theme_dir/_metadata" ]] || [[ -f "${POLICY_DIR}/extension_settings.json" && $(jq -e ".ExtensionSettings[\"${theme_id}\"]" "${POLICY_DIR}/extension_settings.json" >/dev/null 2>&1 && echo "true") == "true" ]]; then
     log_message "Theme ${theme_name} is already installed"
     return 0
   fi
@@ -358,6 +372,9 @@ install_theme() {
   local crx_path="/usr/share/brave/themes/${theme_id}.crx"
   if download_file "$crx_url" "$crx_path"; then
     chmod 644 "$crx_path"
+    if [[ -d "$theme_dir" ]]; then
+      rm -rf "$theme_dir"  # Clean old install
+    fi
     mkdir -p "$theme_dir"
     unzip -o "$crx_path" -d "$theme_dir" >/dev/null 2>&1
     rm -rf "$theme_dir/_metadata"  # Fix _metadata error
