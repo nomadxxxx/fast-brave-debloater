@@ -6,6 +6,8 @@
 A powerful optimization script that transforms Brave Browser into a privacy-focused browsing experience. This script removes unnecessary bloat, enhances performance, and automates installation.
 </p>
 <p align="center">
+  <img src="https://img.shields.io/badge/-Linux-ff7a18?style=flat-square&logo=linux&logoColor=white" alt="Linux Badge">
+  <img src="https://img.shields.io/badge/-macOS-ff7a18?style=flat-square&logo=apple&logoColor=white" alt="macOS Badge">
   <img src="https://img.shields.io/github/stars/nomadxxxx/fast-brave-debloater?style=flat-square&color=ff7a18" alt="GitHub Repo stars">
   <img src="https://img.shields.io/github/forks/nomadxxxx/fast-brave-debloater?style=flat-square&color=ff7a18" alt="GitHub Forks">
   <img src="https://img.shields.io/badge/-Bash-ff7a18?style=flat-square&logo=gnu-bash&logoColor=white" alt="Bash Badge">
