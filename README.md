@@ -1,16 +1,18 @@
-  
+
 <p align="center">
   <img src="https://github.com/nomadxxxx/fast-brave-debloater/blob/main/assets/FastBraveDebloat_logo_small.png?raw=true" />
 </p>
-
 <p align="center">
 A powerful optimization script that transforms Brave Browser into a privacy-focused browsing experience. This script removes unnecessary bloat, enhances performance, and automates installation.
 </p>
+<p align="center">
+  <img src="https://img.shields.io/github/stars/nomadxxxx/fast-brave-debloater?style=flat-square&color=ff7a18" alt="GitHub Repo stars">
+  <img src="https://img.shields.io/github/forks/nomadxxxx/fast-brave-debloater?style=flat-square&color=ff7a18" alt="GitHub Forks">
+  <img src="https://img.shields.io/badge/-Bash-ff7a18?style=flat-square&logo=gnu-bash&logoColor=white" alt="Bash Badge">
+  <img src="https://img.shields.io/badge/-jq-ff7a18?style=flat-square&logo=jq&logoColor=white" alt="jq Badge">
+</p>
 
-
-
-## 🚀 Key Features
-
+## Key Features
 ### Removes Brave Bloat
 ❌ Eliminates cryptocurrency wallet and related UI elements  
 ❌ Removes Brave VPN promotions and notifications  
@@ -38,7 +40,7 @@ A powerful optimization script that transforms Brave Browser into a privacy-focu
 ✅ Configures preferred search engine during setup  
 ✅ Batch installs recommended extensions  
 ✅ Creates optimized desktop launcher with persistent settings  
-
+</p>
 ## 🔍 Search Engine Options
 
 Choose your preferred privacy-respecting search engine:
