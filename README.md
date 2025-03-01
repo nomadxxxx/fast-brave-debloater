@@ -63,8 +63,10 @@ cd fast-brave-debloater
 chmod +x brave_debloat.sh
 sudo ./brave_debloat.sh
 ```
-![alt text](https://github.com/nomadxxxx/fast-brave-debloater/blob/main/screenshot.png) 
-
+## 🔧 Installation (macOS) (TESTING)
+```
+git clone https://github.com/nomadxxxx/fast-brave-debloater.git && cd fast-brave-debloater && chmod +x brave_debloat_macos.sh && sudo ./brave_debloat_macos.sh
+```
 ## 📋 Menu Options
 
 ### 1. Apply Default Optimizations (Recommended)
@@ -76,7 +78,7 @@ sudo ./brave_debloat.sh
 - Creates a specialized wrapper script to prevent duplicate extension installations
 
 ### 2. Install Brave and Apply Customization
-- Installs your choice of Brave variant (Stable/Beta/Nightly)
+- Installs your choi1ce of Brave variant (Stable/Beta/Nightly)
 - Applies all default optimizations automatically
 - Guides you through search engine selection
 - Provides curated extension installation options
@@ -96,9 +98,14 @@ sudo ./brave_debloat.sh
 - **Install Dashboard Customizer** - Replace default new tab page
 - **Enable Dark Mode** - System-wide dark theme for Brave
 - **Install Browser Theme** - Choose from various visual themes
-
+  
 ### 17. Revert All Changes
 - Completely undo all modifications made by the script
+
+### Menu Screenshot
+<p align="center">
+  <img src="https://github.com/nomadxxxx/fast-brave-debloater/blob/main/screenshot.png" alt="Fast Brave Debloater Screenshot">
+</p>
 
 ## 🔄 How the Script Works
 
@@ -134,7 +141,7 @@ The script uses several mechanisms to debloat and optimize Brave:
 - [x] Fix install script for Fedora
 - [x] Include uBlock Origin, Dark Reader and Dark theme by default
 - [x] Implement wrapper script to prevent duplicate extension installations
-- [ ] Update readme to explain new features
+- [x] Update readme to explain new features
 - [ ] Finish and test PowerShell version for Windows
 - [ ] Make a script compatible with macOS
 - [ ] Add support for Firefox as an alternative browser
