@@ -72,6 +72,10 @@ Install homebrew:
 Download and execute script:
 git clone https://github.com/nomadxxxx/fast-brave-debloater.git && cd fast-brave-debloater && chmod +x brave_debloat_macos.sh && sudo ./brave_debloat_macos.sh
 ```
+## 🔧 Installation (Windows)
+```
+It is coming....
+```
 ## 📋 Menu Options
 
 ### 1. Apply Default Optimizations (Recommended)
