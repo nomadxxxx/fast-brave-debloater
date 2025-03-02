@@ -66,13 +66,22 @@ cd fast-brave-debloater
 chmod +x brave_debloat.sh
 sudo ./brave_debloat.sh
 ```
+## Re-running the de-bloat script (Linux):
+If you have pulled a new version of the script from GitHub to test new features I recommend clearing these first to avoid issues:
+```
+sudo rm -rf /usr/share/brave/extensions /usr/share/brave/themes /usr/share/brave/dashboard-extension "${HOME}/.cache/BraveSoftware/Brave-Browser" "${HOME}/.config/BraveSoftware/Brave-Browser/Default/Preferences"
+chmod +x brave_debloat.sh
+sudo ./brave_debloat.sh
+```
 ## 🔧 Installation (macOS) (TESTING)
 ```
-Install homebrew:
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" 
-Download and execute script:
+## Install homebrew:
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+## Download and execute script:
 git clone https://github.com/nomadxxxx/fast-brave-debloater.git && cd fast-brave-debloater && chmod +x brave_debloat_macos.sh && sudo ./brave_debloat_macos.sh
 ```
+
 ## 🔧 Installation (Windows)
 ```
 It is coming....
