@@ -6,6 +6,8 @@
 A powerful optimization script that transforms Brave Browser into a privacy-focused browsing experience. This script removes unnecessary bloat, enhances performance, and automates installation.
 </p>
 <p align="center">
+  <img src="https://img.shields.io/badge/-Linux-ff7a18?style=flat-square&logo=linux&logoColor=white" alt="Linux Badge">
+  <img src="https://img.shields.io/badge/-macOS-ff7a18?style=flat-square&logo=apple&logoColor=white" alt="macOS Badge">
   <img src="https://img.shields.io/github/stars/nomadxxxx/fast-brave-debloater?style=flat-square&color=ff7a18" alt="GitHub Repo stars">
   <img src="https://img.shields.io/github/forks/nomadxxxx/fast-brave-debloater?style=flat-square&color=ff7a18" alt="GitHub Forks">
   <img src="https://img.shields.io/badge/-Bash-ff7a18?style=flat-square&logo=gnu-bash&logoColor=white" alt="Bash Badge">
@@ -41,7 +43,8 @@ A powerful optimization script that transforms Brave Browser into a privacy-focu
 ✅ Batch installs recommended extensions  
 ✅ Creates optimized desktop launcher with persistent settings  
 </p>
-## 🔍 Search Engine Options
+
+##  🔍 Search Engine Options
 
 Choose your preferred privacy-respecting search engine:
 
@@ -63,8 +66,26 @@ cd fast-brave-debloater
 chmod +x brave_debloat.sh
 sudo ./brave_debloat.sh
 ```
-![alt text](https://github.com/nomadxxxx/fast-brave-debloater/blob/main/screenshot.png) 
+## Re-running the de-bloat script (Linux):
+If you have pulled a new version of the script from GitHub to test new features I recommend clearing these first to avoid issues:
+```
+sudo rm -rf /usr/share/brave/extensions /usr/share/brave/themes /usr/share/brave/dashboard-extension "${HOME}/.cache/BraveSoftware/Brave-Browser" "${HOME}/.config/BraveSoftware/Brave-Browser/Default/Preferences"
+chmod +x brave_debloat.sh
+sudo ./brave_debloat.sh
+```
+## 🔧 Installation (macOS) (TESTING)
+```
+## Install homebrew:
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
+## Download and execute script:
+git clone https://github.com/nomadxxxx/fast-brave-debloater.git && cd fast-brave-debloater && chmod +x brave_debloat_macos.sh && sudo ./brave_debloat_macos.sh
+```
+
+## 🔧 Installation (Windows)
+```
+It is coming....
+```
 ## 📋 Menu Options
 
 ### 1. Apply Default Optimizations (Recommended)
@@ -76,7 +97,7 @@ sudo ./brave_debloat.sh
 - Creates a specialized wrapper script to prevent duplicate extension installations
 
 ### 2. Install Brave and Apply Customization
-- Installs your choice of Brave variant (Stable/Beta/Nightly)
+- Installs your choi1ce of Brave variant (Stable/Beta/Nightly)
 - Applies all default optimizations automatically
 - Guides you through search engine selection
 - Provides curated extension installation options
@@ -96,9 +117,14 @@ sudo ./brave_debloat.sh
 - **Install Dashboard Customizer** - Replace default new tab page
 - **Enable Dark Mode** - System-wide dark theme for Brave
 - **Install Browser Theme** - Choose from various visual themes
-
+  
 ### 17. Revert All Changes
 - Completely undo all modifications made by the script
+
+### Menu Screenshot
+<p align="center">
+  <img src="https://github.com/nomadxxxx/fast-brave-debloater/blob/main/screenshot.png" alt="Fast Brave Debloater Screenshot">
+</p>
 
 ## 🔄 How the Script Works
 
@@ -134,7 +160,7 @@ The script uses several mechanisms to debloat and optimize Brave:
 - [x] Fix install script for Fedora
 - [x] Include uBlock Origin, Dark Reader and Dark theme by default
 - [x] Implement wrapper script to prevent duplicate extension installations
-- [ ] Update readme to explain new features
+- [x] Update readme to explain new features
 - [ ] Finish and test PowerShell version for Windows
 - [ ] Make a script compatible with macOS
 - [ ] Add support for Firefox as an alternative browser
