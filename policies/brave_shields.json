@@ -1,0 +1,11 @@
+{
+  "ShieldsAdvancedControlsEnabled": true,
+  "BlockAdsAndTracking": 2,
+  "HTTPSUpgradesEnabled": 2,
+  "BlockScriptsEnabled": true,
+  "BlockThirdPartyCookiesEnabled": true,
+  "FingerprintingProtectionLevel": 2,
+  "PreventFingerprintingViaLanguage": true,
+  "AutoRedirectAMPPagesEnabled": true,
+  "AutoRedirectTrackingURLsEnabled": true
+}

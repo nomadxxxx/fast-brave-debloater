@@ -17,7 +17,19 @@ log_error() {
 log_message "Installing Brave Browser (Beta)..."
 
 # Detect distribution
-if command -v apt &> /dev/null; then
+if [ -f /etc/nixos/configuration.nix ]; then
+  # NixOS
+  log_message "Detected NixOS distribution"
+  log_message "Installing Brave Beta using nix-env..."
+  if nix-env -iA nixpkgs.brave-beta; then
+    log_message "Brave Browser (Beta) installed successfully on NixOS."
+    exit 0
+  else
+    log_error "Failed to install Brave Browser (Beta) on NixOS."
+    exit 1
+  fi
+
+elif command -v apt &> /dev/null; then
   # Debian/Ubuntu based
   log_message "Detected Debian/Ubuntu-based distribution"
   sudo apt install apt-transport-https curl -y
@@ -30,8 +42,8 @@ elif command -v dnf &> /dev/null; then
   # Fedora based
   log_message "Detected Fedora-based distribution"
   sudo dnf install dnf-plugins-core -y
-  sudo dnf config-manager --add-repo https://brave-browser-rpm-beta.s3.brave.com/brave-browser-beta.repo
-  sudo rpm --import https://brave-browser-rpm-beta.s3.brave.com/brave-core.asc
+  sudo dnf config-manager --add-repo https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo
+  sudo rpm --import https://brave-browser-rpm-beta.s3.brave.com/brave-core-beta.asc
   sudo dnf install brave-browser-beta -y
   
 elif command -v pacman &> /dev/null; then
@@ -47,7 +59,7 @@ elif command -v pacman &> /dev/null; then
 elif command -v zypper &> /dev/null; then
   # OpenSUSE
   log_message "Detected OpenSUSE distribution"
-  sudo rpm --import https://brave-browser-rpm-beta.s3.brave.com/brave-core.asc
+  sudo rpm --import https://brave-browser-rpm-beta.s3.brave.com/brave-core-beta.asc
   sudo zypper addrepo https://brave-browser-rpm-beta.s3.brave.com/brave-browser-beta.repo
   sudo zypper install brave-browser-beta -y
   
@@ -62,5 +74,19 @@ if command -v brave-browser-beta &> /dev/null; then
   exit 0
 else
   log_error "Failed to install Brave Browser (Beta)."
-  exit 1
+fi
+
+# At the end of the script, before exiting:
+if ! command -v brave-browser-beta &> /dev/null; then
+  log_message "Standard installation methods failed. Trying Brave's official install script..."
+  curl -fsS https://dl.brave.com/install.sh | sh
+  
+  # Check again if installation succeeded
+  if command -v brave-browser-beta &> /dev/null; then
+    log_message "Brave Browser (Beta) installed successfully using official script."
+    exit 0
+  else
+    log_error "All installation methods failed."
+    exit 1
+  fi
 fi

@@ -5,6 +5,6 @@
   "DefaultSearchProviderEnabled": true,
   "DefaultSearchProviderName": "Brave Search",
   "DefaultSearchProviderSearchURL": "https://search.brave.com/search?q={searchTerms}",
-  "SyncDisabled": true,
-  "BraveSyncEnabled": false
+  "SyncDisabled": false,
+  "BraveSyncEnabled": true
 }

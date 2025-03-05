@@ -17,7 +17,22 @@ log_error() {
 log_message "Installing Brave Browser (Stable)..."
 
 # Detect distribution
-if command -v apt &> /dev/null; then
+if [ -f /etc/nixos/configuration.nix ]; then
+  # NixOS
+  log_message "Detected NixOS distribution"
+  log_message "To install Brave on NixOS, add the following to your configuration.nix:"
+  echo "
+  programs.brave = {
+    enable = true;
+    package = pkgs.brave;
+  };
+  "
+  log_message "Then run 'sudo nixos-rebuild switch' to apply the changes."
+  log_message "Alternatively, you can install Brave using nix-env:"
+  echo "nix-env -iA nixpkgs.brave"
+  exit 0
+
+elif command -v apt &> /dev/null; then
   # Debian/Ubuntu based
   log_message "Detected Debian/Ubuntu-based distribution"
   sudo apt install apt-transport-https curl -y
@@ -64,6 +79,7 @@ else
   log_error "Failed to install Brave Browser (Stable)."
   exit 1
 fi
+
 # At the end of the script, before exiting:
 if ! command -v brave-browser &> /dev/null && ! command -v brave &> /dev/null; then
   log_message "Standard installation methods failed. Trying Brave's official install script..."

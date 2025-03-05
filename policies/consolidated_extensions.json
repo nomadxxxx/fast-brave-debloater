@@ -5,7 +5,10 @@
     "pkehgijcmpdhfbdbbnkijodmdjhbjlgp",
     "ldpochfccmkkmhdbclfhpagapcfdljkj",
     "lckanjgmijmafbedllaakclkaicjfmnk",
-    "eimadpbcbfnmbkopoojfekhnkhdbieeh"
+    "eimadpbcbfnmbkopoojfekhnkhdbieeh",
+    "ohnjgmpcibpbafdlkimncjhflgedgpam",
+    "ailcmbgekjpnablpdkmaaccecekgdhlh",
+    "bgnkhhnnamicmpeenaelnjfhikgbkllg"
   ],
   "categories": {
     "privacy": [
@@ -43,6 +46,13 @@
         "description": "Removes tracking elements from URLs",
         "recommended": true,
         "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/lckanjgmijmafbedllaakclkaicjfmnk.crx"
+      },
+      {
+        "id": "bgnkhhnnamicmpeenaelnjfhikgbkllg",
+        "name": "AdGuard Adblocker",
+        "description": "The world's most advanced ad blocker!",
+        "recommended": true,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/bgnkhhnnamicmpeenaelnjfhikgbkllg.crx"
       }
     ],
     "password_managers": [
@@ -112,6 +122,13 @@
         "description": "Dark mode for every website",
         "recommended": true,
         "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/eimadpbcbfnmbkopoojfekhnkhdbieeh.crx"
+      },
+      {
+        "id": "ohnjgmpcibpbafdlkimncjhflgedgpam",
+        "name": "4chan X",
+        "description": "Enhances 4chan browsing experience",
+        "recommended": true,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/ohnjgmpcibpbafdlkimncjhflgedgpam.crx"
       }
     ],
     "productivity": [
@@ -121,6 +138,13 @@
         "description": "Organize and manage browser tabs efficiently",
         "recommended": false,
         "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/andpjllgocabfacjlelkfpdemfklpfpo.crx"
+      },
+      {
+        "id": "ailcmbgekjpnablpdkmaaccecekgdhlh",
+        "name": "Tabs Manager by Workona",
+        "description": "Organize your tabs, projects, & tasks",
+        "recommended": false,
+        "crx_url": "https://raw.githubusercontent.com/nomadxxxx/fast-brave-debloater/main/extensions/ailcmbgekjpnablpdkmaaccecekgdhlh.crx"
       }
     ],
     "communication": [

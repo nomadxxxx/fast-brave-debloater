@@ -17,7 +17,19 @@ log_error() {
 log_message "Installing Brave Browser (Nightly)..."
 
 # Detect distribution
-if command -v apt &> /dev/null; then
+if [ -f /etc/nixos/configuration.nix ]; then
+  # NixOS
+  log_message "Detected NixOS distribution"
+  log_message "Installing Brave Nightly using nix-env..."
+  if nix-env -iA nixpkgs.brave-nightly; then
+    log_message "Brave Browser (Nightly) installed successfully on NixOS."
+    exit 0
+  else
+    log_error "Failed to install Brave Browser (Nightly) on NixOS."
+    exit 1
+  fi
+
+elif command -v apt &> /dev/null; then
   # Debian/Ubuntu based
   log_message "Detected Debian/Ubuntu-based distribution"
   sudo apt install apt-transport-https curl -y
@@ -63,4 +75,19 @@ if command -v brave-browser-nightly &> /dev/null; then
 else
   log_error "Failed to install Brave Browser (Nightly)."
   exit 1
+fi
+
+# At the end of the script, before exiting:
+if ! command -v brave-browser-nightly &> /dev/null; then
+  log_message "Standard installation methods failed. Trying Brave's official install script..."
+  curl -fsS https://dl.brave.com/install.sh | sh
+  
+  # Check again if installation succeeded
+  if command -v brave-browser-nightly &> /dev/null; then
+    log_message "Brave Browser (Nightly) installed successfully using official script."
+    exit 0
+  else
+    log_error "All installation methods failed."
+    exit 1
+  fi
 fi
