@@ -97,7 +97,7 @@ It is coming....
 - Creates a specialized wrapper script to prevent duplicate extension installations
 
 ### 2. Install Brave and Apply Customization
-- Installs your choi1ce of Brave variant (Stable/Beta/Nightly)
+- Installs your choice of Brave variant (Stable/Beta/Nightly)
 - Applies all default optimizations automatically
 - Guides you through search engine selection
 - Provides curated extension installation options
